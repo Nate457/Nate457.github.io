@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Playable Projects</title>
+    <link rel="stylesheet" href="style.css">
+    
+    <link rel="stylesheet" href="https://pyscript.net/releases/2024.1.1/core.css">
+    <script type="module" src="https://pyscript.net/releases/2024.1.1/core.js"></script>
+</head>
+<body>
+    <nav>
+        <div class="logo">MyPortfolio</div>
+        <ul class="nav-links">
+            <li><a href="index.html">Home</a></li>
+            <li><a href="projects.html" class="btn">Playable Projects</a></li>
+        </ul>
+    </nav>
+
+    <section class="container">
+        <h1>Interactive Projects</h1>
+
+        <div class="project-card">
+            <h2>Python Data Viz / Game</h2>
+            <p>This Python code is running entirely in your browser using PyScript!</p>
+            
+            <py-config>
+                packages = ["matplotlib", "numpy"]
+            </py-config>
+
+            <script type="py">
+                import js
+                from pyodide.ffi import create_proxy
+
+                def greet_user(event):
+                    name = js.document.getElementById("name-input").value
+                    js.document.getElementById("py-output").innerText = f"Hello {name}, from Python in the browser!"
+
+                # Bind the Python function to the HTML button
+                js.document.getElementById("py-btn").addEventListener("click", create_proxy(greet_user))
+            </script>
+
+            <div class="interactive-box">
+                <input type="text" id="name-input" placeholder="Enter your name">
+                <button id="py-btn">Run Python Script</button>
+                <p id="py-output" style="margin-top: 10px; font-weight: bold;"></p>
+            </div>
+        </div>
+
+        <div class="project-card">
+            <h2>C++ Game Engine</h2>
+            <p>Compiled from C++ to WebAssembly (WASM) using Emscripten.</p>
+            
+            <div class="interactive-box">
+                <canvas id="canvas" oncontextmenu="event.preventDefault()" tabindex=-1 width="800" height="600" style="background: black; max-width: 100%;"></canvas>
+            </div>
+            <p><em>Note: You must compile your C++ code with Emscripten targeting this canvas.</em></p>
+        </div>
+    </section>
+
+</body>
+</html>
