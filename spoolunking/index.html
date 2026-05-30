@@ -148,7 +148,7 @@ config = {
     _sdl2 : "canvas",
     user_canvas : 0,
     user_canvas_managed : 0,
-    gui_divider : 2,
+    gui_divider : 1,
     ume_block : 1,
     can_close : 0,
     archive : "spoolunking",
@@ -179,6 +179,41 @@ function show_infobox() {
 </script>
 
     <title>spoolunking</title>
+    <script>
+    // pygbag JS forcibly sets canvas inline styles via setProperty(...,'important').
+    // Poll and override immediately whenever it does so.
+    (function() {
+        function fix() {
+            var cv = document.querySelector('canvas.emscripten');
+            if (!cv) return;
+            var cw = parseInt(cv.style.width)  || 0;
+            var ch = parseInt(cv.style.height) || 0;
+            if (cw <= 0) return;
+            // Only correct when pygbag has set a non-16:9 size
+            var targetRatio = 16 / 9;
+            var currentRatio = cw / (ch || 1);
+            if (Math.abs(currentRatio - targetRatio) < 0.05) return; // already correct
+            var vw = document.documentElement.clientWidth  || window.innerWidth  || 800;
+            var vh = document.documentElement.clientHeight || window.innerHeight || 450;
+            var w, h;
+            if (vw / vh > targetRatio) { h = vh; w = Math.round(h * targetRatio); }
+            else                        { w = vw; h = Math.round(w / targetRatio); }
+            cv.style.setProperty('position', 'relative', 'important');
+            cv.style.setProperty('inset',    'auto',     'important');
+            cv.style.setProperty('width',    w + 'px',   'important');
+            cv.style.setProperty('height',   h + 'px',   'important');
+            cv.style.setProperty('margin',   '0 auto',   'important');
+            cv.style.setProperty('display',  'block',    'important');
+        }
+        // Poll aggressively during startup (first 20s), then slow down
+        var t = 0;
+        var id = setInterval(function() {
+            fix(); t++;
+            if (t > 100) clearInterval(id);   // stop after 20s
+        }, 200);
+        window.addEventListener('resize', fix);
+    })();
+    </script>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -218,15 +253,18 @@ function show_infobox() {
         div.thick_border { border: 4px solid black; }
 
         /* canvas MUST NOT have border/padding — breaks mouse coords */
+        /* Use !important to override pygbag's JS inline style injection */
         canvas.emscripten {
-            border: 0px none;
+            border: 0px none !important;
             background-color: #000;
-            /* Maintain 16:9 — do NOT stretch to fill height */
-            width: 100%;
-            height: auto;
-            aspect-ratio: 16 / 9;
-            max-height: 100vh;
-            max-width: calc(100vh * 16 / 9);
+            /* Force 16:9 and prevent squishing to square */
+            position: relative !important;
+            inset: auto !important;
+            width: 100% !important;
+            height: auto !important;
+            aspect-ratio: 16 / 9 !important;
+            max-width: 100vw !important;
+            max-height: 100vh !important;
             z-index: 5;
             padding: 0;
             margin: 0 auto;
