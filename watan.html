@@ -1,0 +1,1129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Watan — Settlers of Catan | Nathan Janit</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: #0a0f1a; color: #e2e8f0; font-family: 'Inter', sans-serif; min-height: 100vh; overflow-x: hidden; }
+a { color: #00d4ff; text-decoration: none; font-size: 0.85rem; }
+
+/* TOP BAR */
+.topbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 24px; background: rgba(13,22,38,0.95);
+    border-bottom: 1px solid rgba(255,255,255,0.07); position: sticky; top: 0; z-index: 100;
+}
+.topbar h1 { font-size: 1.1rem; font-weight: 800; }
+.topbar h1 span { color: #00d4ff; }
+.topbar-right { display: flex; gap: 12px; align-items: center; }
+
+/* LAYOUT */
+.game-layout {
+    display: flex; height: calc(100vh - 56px);
+}
+.sidebar {
+    width: 280px; flex-shrink: 0; background: rgba(13,22,38,0.8);
+    border-right: 1px solid rgba(255,255,255,0.07);
+    overflow-y: auto; padding: 16px;
+    display: flex; flex-direction: column; gap: 12px;
+}
+.main-area { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden; }
+canvas#gameCanvas { cursor: pointer; }
+
+/* UI PANELS */
+.panel {
+    background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 10px; padding: 14px;
+}
+.panel h3 { font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1.5px; color: #64748b; margin-bottom: 10px; }
+
+/* PLAYERS */
+.player-row {
+    display: flex; align-items: center; gap: 10px; padding: 8px; border-radius: 8px;
+    margin-bottom: 6px; border: 2px solid transparent; transition: all 0.2s;
+}
+.player-row.active-player { border-color: var(--pc); background: rgba(255,255,255,0.04); }
+.player-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+.player-name { font-size: 0.88rem; font-weight: 600; flex: 1; }
+.player-vp { font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; color: #f59e0b; }
+
+/* RESOURCES */
+.res-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-top: 6px; }
+.res-chip {
+    display: flex; flex-direction: column; align-items: center; gap: 2px;
+    background: rgba(0,0,0,0.3); border-radius: 6px; padding: 6px 4px;
+    font-size: 0.7rem; color: #94a3b8;
+}
+.res-count { font-size: 1rem; font-weight: 800; font-family: 'JetBrains Mono', monospace; }
+
+/* DICE */
+.dice-area { display: flex; gap: 10px; align-items: center; justify-content: center; flex-wrap: wrap; }
+.die {
+    width: 46px; height: 46px; background: #fff; color: #000;
+    border-radius: 8px; display: flex; align-items: center; justify-content: center;
+    font-size: 1.5rem; font-weight: 900; transition: transform 0.3s;
+}
+.die.rolling { animation: roll-die 0.4s ease; }
+@keyframes roll-die { 0%,100% { transform: rotate(0); } 25% { transform: rotate(-15deg); } 75% { transform: rotate(15deg); } }
+
+/* BUTTONS */
+.btn-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.game-btn {
+    flex: 1; min-width: 80px; padding: 9px 12px; border-radius: 7px; border: none;
+    font-family: 'Inter', sans-serif; font-size: 0.8rem; font-weight: 600;
+    cursor: pointer; transition: all 0.2s;
+}
+.btn-cyan { background: #00d4ff; color: #000; }
+.btn-cyan:hover { background: #00c0e8; }
+.btn-cyan:disabled { background: #1e293b; color: #475569; cursor: not-allowed; }
+.btn-outline { background: rgba(255,255,255,0.05); color: #94a3b8; border: 1px solid rgba(255,255,255,0.1); }
+.btn-outline:hover { background: rgba(255,255,255,0.09); color: #e2e8f0; }
+.btn-outline:disabled { opacity: 0.4; cursor: not-allowed; }
+.btn-gold { background: #f59e0b; color: #000; }
+.btn-gold:hover { background: #d97706; }
+.btn-red { background: #ef4444; color: #fff; }
+
+/* BUILD MENU */
+.build-costs { font-size: 0.75rem; color: #64748b; margin-top: 4px; }
+
+/* LOG */
+.log-area {
+    flex: 1; overflow-y: auto; max-height: 160px;
+    font-size: 0.72rem; color: #64748b; display: flex; flex-direction: column-reverse;
+}
+.log-entry { padding: 3px 0; border-bottom: 1px solid rgba(255,255,255,0.03); }
+.log-entry.important { color: #00d4ff; }
+.log-entry.warn { color: #f59e0b; }
+
+/* MODAL */
+.overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.75); backdrop-filter: blur(6px);
+    z-index: 200; display: flex; align-items: center; justify-content: center;
+    transition: opacity 0.3s;
+}
+.overlay.hidden { display: none; }
+.modal {
+    background: #0d1626; border: 1px solid rgba(0,212,255,0.3);
+    border-radius: 16px; padding: 36px; max-width: 480px; width: 90%;
+    text-align: center; box-shadow: 0 0 60px rgba(0,212,255,0.15);
+}
+.modal h2 { font-size: 1.8rem; font-weight: 900; color: #fff; margin-bottom: 12px; }
+.modal p { color: #94a3b8; margin-bottom: 24px; line-height: 1.6; font-size: 0.9rem; }
+.player-setup { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; text-align: left; }
+.setup-row { display: flex; gap: 10px; align-items: center; }
+.setup-row label { width: 70px; font-size: 0.8rem; color: #64748b; flex-shrink: 0; }
+.setup-row input { flex: 1; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
+    color: #fff; padding: 8px 12px; border-radius: 6px; font-size: 0.85rem; font-family: 'Inter', sans-serif; }
+.color-pick { display: flex; gap: 8px; }
+.color-swatch {
+    width: 26px; height: 26px; border-radius: 50%; cursor: pointer;
+    border: 2px solid transparent; transition: transform 0.2s;
+}
+.color-swatch:hover { transform: scale(1.15); }
+.color-swatch.selected { border-color: #fff; }
+
+/* STATUS BAR */
+.status-bar {
+    padding: 8px 16px; background: rgba(13,22,38,0.8);
+    border-top: 1px solid rgba(255,255,255,0.07);
+    font-size: 0.8rem; color: #64748b; text-align: center; min-height: 36px;
+}
+.status-bar span { color: #00d4ff; }
+
+/* TRADE MODAL */
+.trade-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 16px 0; }
+.trade-col { background: rgba(255,255,255,0.04); border-radius: 8px; padding: 12px; }
+.trade-col h4 { font-size: 0.75rem; color: #64748b; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
+.trade-res-btn {
+    width: 100%; padding: 8px; margin-bottom: 6px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1);
+    background: rgba(255,255,255,0.05); color: #e2e8f0; font-size: 0.8rem; cursor: pointer; text-align: left;
+    display: flex; justify-content: space-between; align-items: center; font-family: 'Inter', sans-serif;
+    transition: all 0.15s;
+}
+.trade-res-btn:hover { background: rgba(0,212,255,0.1); border-color: rgba(0,212,255,0.3); }
+.trade-res-btn.selected { background: rgba(0,212,255,0.15); border-color: #00d4ff; }
+    </style>
+</head>
+<body>
+
+<div class="topbar">
+    <h1>⚔️ <span>Watan</span> — Settlers of Catan</h1>
+    <div class="topbar-right">
+        <span id="phase-label" style="font-size:0.8rem; color:#64748b;"></span>
+        <a href="index.html">← Portfolio</a>
+    </div>
+</div>
+
+<div class="game-layout">
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+        <!-- Players -->
+        <div class="panel">
+            <h3>Players</h3>
+            <div id="players-list"></div>
+        </div>
+
+        <!-- Current Player Resources -->
+        <div class="panel">
+            <h3>Your Resources</h3>
+            <div class="res-grid" id="res-display">
+                <div class="res-chip"><span>🌲</span><span class="res-count" id="r-wood">0</span><span>Wood</span></div>
+                <div class="res-chip"><span>🧱</span><span class="res-count" id="r-brick">0</span><span>Brick</span></div>
+                <div class="res-chip"><span>🌾</span><span class="res-count" id="r-grain">0</span><span>Grain</span></div>
+                <div class="res-chip"><span>🐑</span><span class="res-count" id="r-sheep">0</span><span>Sheep</span></div>
+                <div class="res-chip"><span>⛏️</span><span class="res-count" id="r-ore">0</span><span>Ore</span></div>
+            </div>
+        </div>
+
+        <!-- Dice -->
+        <div class="panel">
+            <h3>Dice</h3>
+            <div class="dice-area" style="margin-bottom:10px;">
+                <div class="die" id="die1">—</div>
+                <div class="die" id="die2">—</div>
+                <div style="font-family:'JetBrains Mono',monospace; font-size:1.4rem; font-weight:800; color:#f59e0b;" id="dice-sum"></div>
+            </div>
+            <button class="game-btn btn-cyan" id="btn-roll" onclick="rollDice()">🎲 Roll Dice</button>
+        </div>
+
+        <!-- Build -->
+        <div class="panel">
+            <h3>Build</h3>
+            <div class="btn-row" style="flex-direction:column; gap:6px;">
+                <button class="game-btn btn-outline" id="btn-road" onclick="setBuildMode('road')">
+                    🛤️ Road <span class="build-costs">W+B</span>
+                </button>
+                <button class="game-btn btn-outline" id="btn-settle" onclick="setBuildMode('settlement')">
+                    🏠 Settlement <span class="build-costs">W+B+G+Sh</span>
+                </button>
+                <button class="game-btn btn-outline" id="btn-city" onclick="setBuildMode('city')">
+                    🏙️ City <span class="build-costs">2G+3O</span>
+                </button>
+                <button class="game-btn btn-gold" id="btn-trade" onclick="openTrade()">
+                    ↔️ Trade (4:1)
+                </button>
+            </div>
+        </div>
+
+        <!-- End Turn -->
+        <div class="panel">
+            <button class="game-btn btn-cyan" id="btn-end" onclick="endTurn()">✅ End Turn</button>
+            <div style="margin-top:8px;">
+                <button class="game-btn btn-outline" onclick="restartGame()" style="width:100%;font-size:0.75rem;">↩ New Game</button>
+            </div>
+        </div>
+
+        <!-- Log -->
+        <div class="panel" style="flex:1; min-height:100px;">
+            <h3>Log</h3>
+            <div class="log-area" id="game-log"></div>
+        </div>
+    </div>
+
+    <!-- MAIN -->
+    <div class="main-area">
+        <canvas id="gameCanvas"></canvas>
+        <div class="status-bar" id="status-bar">Click <span>New Game</span> to begin!</div>
+    </div>
+</div>
+
+<!-- SETUP MODAL -->
+<div class="overlay" id="setup-overlay">
+    <div class="modal">
+        <div style="font-size:3rem;margin-bottom:8px;">🎲</div>
+        <h2>Watan</h2>
+        <p>Settlers of Catan — Local Multiplayer (2–4 players, hotseat)</p>
+        <div class="player-setup" id="player-setup"></div>
+        <div style="display:flex;gap:10px;justify-content:center;margin-bottom:16px;">
+            <button class="game-btn btn-outline" onclick="setNumPlayers(2)">2 Players</button>
+            <button class="game-btn btn-outline" onclick="setNumPlayers(3)">3 Players</button>
+            <button class="game-btn btn-outline btn-cyan" onclick="setNumPlayers(4)">4 Players</button>
+        </div>
+        <button class="game-btn btn-cyan" onclick="startGame()" style="width:100%;padding:14px;font-size:1rem;">Start Game</button>
+        <p style="margin-top:16px; font-size:0.75rem; color:#475569;">
+            Original: <strong>C++20 networked version</strong> by Nathan Janit (UW CS assignment).
+            This is a JavaScript web port of the same game.
+        </p>
+    </div>
+</div>
+
+<!-- WIN MODAL -->
+<div class="overlay hidden" id="win-overlay">
+    <div class="modal">
+        <div style="font-size:4rem;margin-bottom:8px;">🏆</div>
+        <h2 id="win-text">Player Wins!</h2>
+        <p id="win-sub">First to 10 Victory Points.</p>
+        <button class="game-btn btn-cyan" onclick="restartGame()" style="width:100%;padding:14px;font-size:1rem;margin-top:8px;">Play Again</button>
+    </div>
+</div>
+
+<!-- TRADE MODAL -->
+<div class="overlay hidden" id="trade-overlay">
+    <div class="modal" style="max-width:400px;">
+        <h2 style="font-size:1.3rem;">Bank Trade (4:1)</h2>
+        <p>Give 4 of one resource, get 1 of any other.</p>
+        <div class="trade-grid">
+            <div class="trade-col">
+                <h4>Give (4×)</h4>
+                <div id="trade-give"></div>
+            </div>
+            <div class="trade-col">
+                <h4>Receive (1×)</h4>
+                <div id="trade-receive"></div>
+            </div>
+        </div>
+        <div style="display:flex;gap:10px;">
+            <button class="game-btn btn-outline" onclick="closeTrade()" style="flex:1;">Cancel</button>
+            <button class="game-btn btn-cyan" id="btn-confirm-trade" onclick="confirmTrade()" style="flex:1;">Trade</button>
+        </div>
+    </div>
+</div>
+
+<script>
+/* ============================================================
+   WATAN — Complete Settlers of Catan in JavaScript
+   ============================================================ */
+
+const RESOURCES = ['wood','brick','grain','sheep','ore'];
+const RES_EMOJI = { wood:'🌲', brick:'🧱', grain:'🌾', sheep:'🐑', ore:'⛏️' };
+const RES_COLORS = {
+    wood:   '#2d6a4f', brick: '#c1440e', grain: '#e9c46a',
+    sheep:  '#7cb518', ore:   '#718096', desert:'#c8a96e',
+};
+const PLAYER_COLORS = ['#ef4444','#3b82f6','#22c55e','#f59e0b'];
+const PLAYER_NAMES  = ['Red','Blue','Green','Orange'];
+
+const ROAD_COST       = { wood:1, brick:1 };
+const SETTLEMENT_COST = { wood:1, brick:1, grain:1, sheep:1 };
+const CITY_COST       = { grain:2, ore:3 };
+
+// Standard Catan board: axial coords [q,r], resource, number
+const BOARD_DEF = [
+    // Row 0 (top, 3 hexes)
+    {q:0,r:-2, res:'ore',    num:10},
+    {q:1,r:-2, res:'sheep',  num:2},
+    {q:2,r:-2, res:'wood',   num:9},
+    // Row 1 (4 hexes)
+    {q:-1,r:-1, res:'grain', num:12},
+    {q:0, r:-1, res:'brick', num:6},
+    {q:1, r:-1, res:'sheep', num:4},
+    {q:2, r:-1, res:'brick', num:10},
+    // Row 2 (middle, 5 hexes)
+    {q:-2,r:0,  res:'grain', num:9},
+    {q:-1,r:0,  res:'wood',  num:11},
+    {q:0, r:0,  res:'desert',num:0},
+    {q:1, r:0,  res:'wood',  num:3},
+    {q:2, r:0,  res:'ore',   num:8},
+    // Row 3 (4 hexes)
+    {q:-2,r:1,  res:'wood',  num:8},
+    {q:-1,r:1,  res:'ore',   num:3},
+    {q:0, r:1,  res:'grain', num:4},
+    {q:1, r:1,  res:'sheep', num:5},
+    // Row 4 (bottom, 3 hexes)
+    {q:-2,r:2,  res:'brick', num:5},
+    {q:-1,r:2,  res:'grain', num:6},
+    {q:0, r:2,  res:'sheep', num:11},
+];
+
+// State
+let G = null; // game state
+let buildMode = null; // 'road' | 'settlement' | 'city' | null
+let numPlayers = 4;
+let tradeGive = null, tradeGet = null;
+
+// Canvas
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+let HEX_SIZE = 60;
+
+// ── HEX MATH ────────────────────────────────────────────────
+function hexToPixel(q, r, cx, cy, size) {
+    const x = cx + size * (3/2 * q);
+    const y = cy + size * (Math.sqrt(3)/2 * q + Math.sqrt(3) * r);
+    return { x, y };
+}
+
+function hexCorner(cx, cy, size, i) {
+    const angle = (Math.PI / 180) * (60 * i);
+    return { x: cx + size * Math.cos(angle), y: cy + size * Math.sin(angle) };
+}
+
+// ── VERTEX KEY ────────────────────────────────────────────
+function vertKey(x, y) {
+    return `${Math.round(x)},${Math.round(y)}`;
+}
+
+// ── SETUP MODAL ──────────────────────────────────────────
+function setNumPlayers(n) {
+    numPlayers = n;
+    document.querySelectorAll('#setup-overlay .btn-outline').forEach((b,i) => {
+        b.className = 'game-btn ' + ((i+2 === n) ? 'btn-cyan' : 'btn-outline');
+    });
+    buildSetupUI();
+}
+
+function buildSetupUI() {
+    const c = document.getElementById('player-setup');
+    c.innerHTML = '';
+    for (let i = 0; i < numPlayers; i++) {
+        const row = document.createElement('div');
+        row.className = 'setup-row';
+        row.innerHTML = `
+            <label style="color:${PLAYER_COLORS[i]}">Player ${i+1}</label>
+            <input type="text" id="pname-${i}" value="${PLAYER_NAMES[i]}" maxlength="12">
+        `;
+        c.appendChild(row);
+    }
+}
+
+buildSetupUI();
+
+// ── GAME INIT ────────────────────────────────────────────
+function startGame() {
+    document.getElementById('setup-overlay').classList.add('hidden');
+
+    // Build players
+    const players = [];
+    for (let i = 0; i < numPlayers; i++) {
+        const nameEl = document.getElementById(`pname-${i}`);
+        players.push({
+            name: nameEl ? nameEl.value || PLAYER_NAMES[i] : PLAYER_NAMES[i],
+            color: PLAYER_COLORS[i],
+            resources: { wood:0, brick:0, grain:0, sheep:0, ore:0 },
+            vp: 0,
+            settlements: [],
+            cities: [],
+            roads: [],
+        });
+    }
+
+    // Compute center
+    resizeCanvas();
+    const cx = canvas.width / 2, cy = canvas.height / 2;
+
+    // Build hex data with pixel coords
+    const hexes = BOARD_DEF.map(h => {
+        const px = hexToPixel(h.q, h.r, cx, cy, HEX_SIZE);
+        return { ...h, cx: px.x, cy: px.y, res: h.res, num: h.num };
+    });
+
+    // Build vertex map (shared corners)
+    const vertexMap = {}; // key -> {x,y, building:null, hexes:[]}
+    hexes.forEach((hex, hi) => {
+        for (let c = 0; c < 6; c++) {
+            const corner = hexCorner(hex.cx, hex.cy, HEX_SIZE, c);
+            const key = vertKey(corner.x, corner.y);
+            if (!vertexMap[key]) {
+                vertexMap[key] = { x: corner.x, y: corner.y, building: null, hexes: [], key };
+            }
+            vertexMap[key].hexes.push(hi);
+        }
+    });
+    const vertices = Object.values(vertexMap);
+
+    // Build edge map (pairs of adjacent vertices)
+    const edgeMap = {};
+    hexes.forEach(hex => {
+        const corners = [];
+        for (let c = 0; c < 6; c++) corners.push(hexCorner(hex.cx, hex.cy, HEX_SIZE, c));
+        for (let c = 0; c < 6; c++) {
+            const a = corners[c], b = corners[(c+1)%6];
+            const ka = vertKey(a.x, a.y), kb = vertKey(b.x, b.y);
+            const ekey = [ka, kb].sort().join('|');
+            if (!edgeMap[ekey]) edgeMap[ekey] = { v1: ka, v2: kb, road: null };
+        }
+    });
+    const edges = Object.values(edgeMap);
+
+    // Robber starts on desert
+    const robberIdx = hexes.findIndex(h => h.res === 'desert');
+
+    G = {
+        players, hexes, vertices, vertexMap, edges, edgeMap,
+        currentPlayer: 0,
+        phase: 'setup',
+        setupPhase: 1,     // 1 or 2 (two rounds of placement)
+        setupSettlements: 0, // how many settlements placed in setup
+        setupDir: 1,        // 1 = forward, -1 = backward through players
+        setupOrder: [],      // order of play in setup
+        diceRolled: false,
+        robberHex: robberIdx,
+        robberMode: false,
+        log: [],
+    };
+
+    // Build setup order: [0,1,2,3,3,2,1,0] for 4p
+    for (let i = 0; i < numPlayers; i++) G.setupOrder.push(i);
+    for (let i = numPlayers - 1; i >= 0; i--) G.setupOrder.push(i);
+    G.currentPlayer = G.setupOrder[0];
+    G.setupIdx = 0;
+
+    setBuildMode(null);
+    updateUI();
+    draw();
+    addLog(`Game started! ${players.length} players.`, 'important');
+    setStatus(`Setup Phase: ${G.players[G.currentPlayer].name}, place your first settlement`);
+}
+
+function restartGame() {
+    document.getElementById('win-overlay').classList.add('hidden');
+    document.getElementById('setup-overlay').classList.remove('hidden');
+    G = null;
+    buildMode = null;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+}
+
+// ── CANVAS RESIZE ────────────────────────────────────────
+function resizeCanvas() {
+    const container = canvas.parentElement;
+    canvas.width  = container.clientWidth;
+    canvas.height = container.clientHeight - 36;
+    HEX_SIZE = Math.min(canvas.width, canvas.height) / 12;
+    if (G) {
+        const cx = canvas.width / 2, cy = canvas.height / 2;
+        G.hexes.forEach(h => {
+            const px = hexToPixel(h.q, h.r, cx, cy, HEX_SIZE);
+            h.cx = px.x; h.cy = px.y;
+        });
+        G.vertices.forEach(v => delete v._fresh);
+        // Recompute vertex positions
+        const newVMap = {};
+        G.hexes.forEach((hex, hi) => {
+            for (let c = 0; c < 6; c++) {
+                const corner = hexCorner(hex.cx, hex.cy, HEX_SIZE, c);
+                const key = vertKey(corner.x, corner.y);
+                if (!newVMap[key]) {
+                    // find existing vertex
+                    newVMap[key] = corner;
+                }
+            }
+        });
+        G.vertices.forEach(v => {
+            // find nearest new position
+            let best = null, bestD = Infinity;
+            G.hexes.forEach(hex => {
+                for (let c = 0; c < 6; c++) {
+                    const corner = hexCorner(hex.cx, hex.cy, HEX_SIZE, c);
+                    const d = Math.hypot(corner.x - v.x, corner.y - v.y);
+                    if (d < bestD) { bestD = d; best = corner; }
+                }
+            });
+            if (best && bestD < 5) { v.x = best.x; v.y = best.y; }
+        });
+    }
+    if (G) draw();
+}
+
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas();
+
+// ── DRAW ─────────────────────────────────────────────────
+function draw() {
+    if (!G) return;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Ocean background
+    ctx.fillStyle = '#1e3a5f';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Hexes
+    G.hexes.forEach((hex, hi) => {
+        drawHex(hex, hi);
+    });
+
+    // Edges (roads)
+    G.edges.forEach(e => {
+        if (e.road) drawRoad(e);
+    });
+
+    // Hover highlight for buildMode
+    if (buildMode === 'road' && G.phase === 'main' && G.diceRolled) {
+        G.edges.forEach(e => {
+            if (!e.road && canPlaceRoad(e)) {
+                const v1 = G.vertexMap[e.v1], v2 = G.vertexMap[e.v2];
+                if (v1 && v2) {
+                    ctx.save();
+                    ctx.strokeStyle = 'rgba(0,212,255,0.5)';
+                    ctx.lineWidth = 6;
+                    ctx.lineCap = 'round';
+                    ctx.beginPath();
+                    ctx.moveTo(v1.x, v1.y);
+                    ctx.lineTo(v2.x, v2.y);
+                    ctx.stroke();
+                    ctx.restore();
+                }
+            }
+        });
+    }
+
+    // Vertices (settlements/cities)
+    G.vertices.forEach(v => drawVertex(v));
+
+    // Robber
+    const rh = G.hexes[G.robberHex];
+    if (rh) {
+        ctx.fillStyle = '#000';
+        ctx.font = `${HEX_SIZE * 0.55}px serif`;
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText('☠️', rh.cx, rh.cy + HEX_SIZE * 0.15);
+    }
+}
+
+function drawHex(hex, hi) {
+    const isRobber = (hi === G.robberHex);
+    ctx.beginPath();
+    for (let c = 0; c < 6; c++) {
+        const p = hexCorner(hex.cx, hex.cy, HEX_SIZE * 0.97, c);
+        c === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y);
+    }
+    ctx.closePath();
+
+    // Fill
+    ctx.fillStyle = isRobber ? '#555' : RES_COLORS[hex.res] || '#888';
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(0,0,0,0.4)';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Number token
+    if (hex.num > 0) {
+        const isRed = (hex.num === 6 || hex.num === 8);
+        ctx.beginPath();
+        ctx.arc(hex.cx, hex.cy, HEX_SIZE * 0.28, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(245,230,200,0.95)';
+        ctx.fill();
+        ctx.fillStyle = isRed ? '#c1440e' : '#1a1a1a';
+        ctx.font = `bold ${HEX_SIZE * 0.28}px 'JetBrains Mono', monospace`;
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText(hex.num, hex.cx, hex.cy);
+
+        // Probability dots
+        const dots = Math.min(hex.num <= 7 ? hex.num - 1 : 13 - hex.num, 5);
+        const dotR = HEX_SIZE * 0.04;
+        const spacing = dotR * 2.8;
+        for (let d = 0; d < dots; d++) {
+            const dx = hex.cx - (dots-1)/2*spacing + d*spacing;
+            ctx.beginPath();
+            ctx.arc(dx, hex.cy + HEX_SIZE * 0.3, dotR, 0, Math.PI * 2);
+            ctx.fillStyle = isRed ? '#c1440e' : '#333';
+            ctx.fill();
+        }
+    }
+
+    // Resource icon
+    const icons = { wood:'🌲', brick:'🧱', grain:'🌾', sheep:'🐑', ore:'⛏️', desert:'🏜️' };
+    ctx.font = `${HEX_SIZE * 0.35}px serif`;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(icons[hex.res] || '', hex.cx, hex.cy - HEX_SIZE * 0.55);
+}
+
+function drawRoad(edge) {
+    const v1 = G.vertexMap[edge.v1], v2 = G.vertexMap[edge.v2];
+    if (!v1 || !v2) return;
+    const p = G.players[edge.road.player];
+    ctx.save();
+    ctx.strokeStyle = p.color;
+    ctx.lineWidth = HEX_SIZE * 0.12;
+    ctx.lineCap = 'round';
+    ctx.shadowColor = p.color;
+    ctx.shadowBlur = 6;
+    ctx.beginPath();
+    ctx.moveTo(v1.x, v1.y);
+    ctx.lineTo(v2.x, v2.y);
+    ctx.stroke();
+    ctx.restore();
+}
+
+function drawVertex(v) {
+    if (!v.building) {
+        // Show buildable vertex hint
+        const canBuild = buildMode === 'settlement' && canPlaceSettlement(v);
+        const canCity  = buildMode === 'city' && v.building && v.building.type === 'settlement' && v.building.player === G.currentPlayer;
+        if (canBuild) {
+            ctx.beginPath();
+            ctx.arc(v.x, v.y, HEX_SIZE * 0.18, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(0,212,255,0.3)';
+            ctx.strokeStyle = '#00d4ff';
+            ctx.lineWidth = 2;
+            ctx.fill(); ctx.stroke();
+        }
+        return;
+    }
+    const { type, player } = v.building;
+    const p = G.players[player];
+
+    if (type === 'settlement') {
+        ctx.save();
+        ctx.shadowColor = p.color; ctx.shadowBlur = 12;
+        ctx.fillStyle = p.color;
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 2;
+        const s = HEX_SIZE * 0.22;
+        ctx.beginPath();
+        ctx.moveTo(v.x, v.y - s);
+        ctx.lineTo(v.x + s, v.y + s * 0.5);
+        ctx.lineTo(v.x - s, v.y + s * 0.5);
+        ctx.closePath();
+        ctx.fill(); ctx.stroke();
+        ctx.restore();
+    } else {
+        // City
+        ctx.save();
+        ctx.shadowColor = p.color; ctx.shadowBlur = 16;
+        ctx.fillStyle = p.color;
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 2;
+        const s = HEX_SIZE * 0.28;
+        ctx.beginPath();
+        ctx.rect(v.x - s*0.7, v.y - s*0.4, s*1.4, s*0.9);
+        ctx.fill(); ctx.stroke();
+        ctx.beginPath();
+        ctx.rect(v.x - s*0.35, v.y - s*0.75, s*0.7, s*0.4);
+        ctx.fill(); ctx.stroke();
+        ctx.restore();
+    }
+
+    // Upgrade hint
+    if (buildMode === 'city' && type === 'settlement' && player === G.currentPlayer) {
+        ctx.beginPath();
+        ctx.arc(v.x, v.y, HEX_SIZE * 0.32, 0, Math.PI * 2);
+        ctx.strokeStyle = '#f59e0b';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+    }
+}
+
+// ── CLICK HANDLER ─────────────────────────────────────────
+canvas.addEventListener('click', (e) => {
+    if (!G) return;
+    const rect = canvas.getBoundingClientRect();
+    const mx = e.clientX - rect.left, my = e.clientY - rect.top;
+
+    if (G.robberMode) {
+        // Place robber on clicked hex
+        const hi = nearestHex(mx, my);
+        if (hi !== null && hi !== G.robberHex) {
+            G.hexes[hi].res !== 'desert' && (G.robberHex = hi);
+            G.robberMode = false;
+            addLog(`Robber moved.`);
+            draw();
+            setStatus(`${G.players[G.currentPlayer].name}: build or end turn`);
+        }
+        return;
+    }
+
+    if (G.phase === 'setup') {
+        // Place settlement or road in setup
+        if (!G.setupRoadPending) {
+            const v = nearestVertex(mx, my, HEX_SIZE * 0.4);
+            if (v && canPlaceSetupSettlement(v)) {
+                v.building = { type: 'settlement', player: G.currentPlayer };
+                G.players[G.currentPlayer].settlements.push(v.key);
+                G.players[G.currentPlayer].vp++;
+                // In round 2, collect initial resources
+                if (G.setupPhase === 2) giveSetupResources(v);
+                addLog(`${G.players[G.currentPlayer].name} placed settlement.`, 'important');
+                G.setupRoadPending = true;
+                draw();
+                setStatus(`${G.players[G.currentPlayer].name}: now place a road adjacent to your settlement`);
+            }
+        } else {
+            const lastSettlement = G.players[G.currentPlayer].settlements.slice(-1)[0];
+            const lv = G.vertexMap[lastSettlement];
+            const edge = nearestEdgeAdjacentTo(mx, my, lv);
+            if (edge && !edge.road) {
+                edge.road = { player: G.currentPlayer };
+                G.players[G.currentPlayer].roads.push(edge);
+                addLog(`${G.players[G.currentPlayer].name} placed road.`);
+                G.setupRoadPending = false;
+                advanceSetup();
+                draw();
+            }
+        }
+        return;
+    }
+
+    if (!buildMode || !G.diceRolled) return;
+
+    if (buildMode === 'settlement') {
+        const v = nearestVertex(mx, my, HEX_SIZE * 0.4);
+        if (v && canPlaceSettlement(v)) {
+            if (!canAfford(SETTLEMENT_COST)) { setStatus('Not enough resources!'); return; }
+            payResources(SETTLEMENT_COST);
+            v.building = { type: 'settlement', player: G.currentPlayer };
+            G.players[G.currentPlayer].settlements.push(v.key);
+            G.players[G.currentPlayer].vp++;
+            addLog(`${G.players[G.currentPlayer].name} built settlement (+1 VP)`, 'important');
+            checkWin();
+            setBuildMode(null);
+            draw();
+            updateUI();
+        }
+    } else if (buildMode === 'city') {
+        const v = nearestVertex(mx, my, HEX_SIZE * 0.4);
+        if (v && v.building && v.building.type === 'settlement' && v.building.player === G.currentPlayer) {
+            if (!canAfford(CITY_COST)) { setStatus('Not enough resources! (Need 2 Grain + 3 Ore)'); return; }
+            payResources(CITY_COST);
+            v.building.type = 'city';
+            G.players[G.currentPlayer].vp++;
+            addLog(`${G.players[G.currentPlayer].name} upgraded to city (+1 VP)`, 'important');
+            checkWin();
+            setBuildMode(null);
+            draw();
+            updateUI();
+        }
+    } else if (buildMode === 'road') {
+        const edge = nearestEdge(mx, my, HEX_SIZE * 0.25);
+        if (edge && !edge.road && canPlaceRoad(edge)) {
+            if (!canAfford(ROAD_COST)) { setStatus('Not enough resources! (Need Wood + Brick)'); return; }
+            payResources(ROAD_COST);
+            edge.road = { player: G.currentPlayer };
+            G.players[G.currentPlayer].roads.push(edge);
+            addLog(`${G.players[G.currentPlayer].name} built road.`);
+            setBuildMode(null);
+            draw();
+            updateUI();
+        }
+    }
+});
+
+// ── SETUP HELPERS ─────────────────────────────────────────
+function advanceSetup() {
+    G.setupIdx++;
+    if (G.setupIdx >= G.setupOrder.length) {
+        G.phase = 'main';
+        G.currentPlayer = 0;
+        document.getElementById('btn-roll').disabled = false;
+        document.getElementById('btn-end').disabled = false;
+        addLog('Setup complete. Player 1 starts!', 'important');
+        setStatus(`${G.players[0].name}: roll the dice!`);
+        updateUI();
+        return;
+    }
+    G.currentPlayer = G.setupOrder[G.setupIdx];
+    G.setupPhase = G.setupIdx >= numPlayers ? 2 : 1;
+    setStatus(`Setup Phase ${G.setupPhase}: ${G.players[G.currentPlayer].name}, place your settlement`);
+    updateUI();
+}
+
+function canPlaceSetupSettlement(v) {
+    if (v.building) return false;
+    for (const adj of getAdjacentVertices(v)) {
+        if (adj.building) return false;
+    }
+    return true;
+}
+
+function giveSetupResources(v) {
+    v.hexes.forEach(hi => {
+        const h = G.hexes[hi];
+        if (h.res !== 'desert') G.players[G.currentPlayer].resources[h.res]++;
+    });
+}
+
+// ── GAME ACTIONS ───────────────────────────────────────────
+function rollDice() {
+    if (!G || G.phase !== 'main' || G.diceRolled) return;
+    const d1 = Math.ceil(Math.random() * 6), d2 = Math.ceil(Math.random() * 6);
+    const sum = d1 + d2;
+
+    const die1 = document.getElementById('die1'), die2 = document.getElementById('die2');
+    die1.textContent = ['','⚀','⚁','⚂','⚃','⚄','⚅'][d1];
+    die2.textContent = ['','⚀','⚁','⚂','⚃','⚄','⚅'][d2];
+    die1.classList.add('rolling'); die2.classList.add('rolling');
+    setTimeout(() => { die1.classList.remove('rolling'); die2.classList.remove('rolling'); }, 400);
+    document.getElementById('dice-sum').textContent = sum;
+
+    G.diceRolled = true;
+    document.getElementById('btn-roll').disabled = true;
+
+    addLog(`${G.players[G.currentPlayer].name} rolled ${d1}+${d2}=${sum}`, sum === 7 ? 'warn' : '');
+
+    if (sum === 7) {
+        // Robber
+        addLog('Robber! Click a hex to move it.', 'warn');
+        G.robberMode = true;
+        setStatus(`Robber! Click a tile to place the robber.`);
+        // Discard for players with > 7 cards
+        G.players.forEach((p, pi) => {
+            const total = Object.values(p.resources).reduce((a,b)=>a+b,0);
+            if (total > 7) {
+                const discard = Math.floor(total / 2);
+                let discarded = 0;
+                for (const r of RESOURCES) {
+                    while (p.resources[r] > 0 && discarded < discard) {
+                        p.resources[r]--; discarded++;
+                    }
+                }
+                addLog(`${p.name} discarded ${discard} cards.`, 'warn');
+            }
+        });
+    } else {
+        // Distribute resources
+        G.hexes.forEach((h, hi) => {
+            if (h.num === sum && hi !== G.robberHex) {
+                h.hexes_vertices = h.hexes_vertices || [];
+                G.vertices.forEach(v => {
+                    if (v.hexes.includes(hi) && v.building) {
+                        const p = G.players[v.building.player];
+                        const amt = v.building.type === 'city' ? 2 : 1;
+                        p.resources[h.res] += amt;
+                    }
+                });
+            }
+        });
+        setStatus(`${G.players[G.currentPlayer].name}: build something or end turn`);
+        addLog(`Resources distributed for roll ${sum}.`);
+    }
+    updateUI();
+    draw();
+}
+
+function endTurn() {
+    if (!G || G.phase !== 'main') return;
+    if (!G.diceRolled) { setStatus('Roll the dice first!'); return; }
+    const prev = G.players[G.currentPlayer].name;
+    G.currentPlayer = (G.currentPlayer + 1) % numPlayers;
+    G.diceRolled = false;
+    setBuildMode(null);
+    document.getElementById('btn-roll').disabled = false;
+    document.getElementById('die1').textContent = '—';
+    document.getElementById('die2').textContent = '—';
+    document.getElementById('dice-sum').textContent = '';
+    addLog(`${prev} ended turn.`);
+    setStatus(`${G.players[G.currentPlayer].name}: roll the dice!`);
+    updateUI();
+    draw();
+}
+
+function setBuildMode(mode) {
+    buildMode = mode;
+    ['road','settle','city'].forEach(id => {
+        const b = document.getElementById(`btn-${id}`);
+        if (b) b.style.borderColor = '';
+    });
+    if (mode) {
+        const map = { road:'btn-road', settlement:'btn-settle', city:'btn-city' };
+        const b = document.getElementById(map[mode]);
+        if (b) b.style.borderColor = '#00d4ff';
+        setStatus(`Click on the board to place a ${mode}`);
+    }
+    draw();
+}
+
+// ── TRADE ─────────────────────────────────────────────────
+function openTrade() {
+    if (!G || G.phase !== 'main' || !G.diceRolled) return;
+    tradeGive = null; tradeGet = null;
+    const p = G.players[G.currentPlayer];
+
+    const giveDiv = document.getElementById('trade-give');
+    const recvDiv = document.getElementById('trade-receive');
+    giveDiv.innerHTML = ''; recvDiv.innerHTML = '';
+
+    RESOURCES.forEach(r => {
+        const give = document.createElement('button');
+        give.className = 'trade-res-btn' + (p.resources[r] >= 4 ? '' : ' disabled');
+        give.innerHTML = `${RES_EMOJI[r]} ${r} <span>${p.resources[r]}</span>`;
+        give.onclick = () => {
+            if (p.resources[r] < 4) return;
+            tradeGive = r;
+            giveDiv.querySelectorAll('.trade-res-btn').forEach(b => b.classList.remove('selected'));
+            give.classList.add('selected');
+        };
+        if (p.resources[r] < 4) give.style.opacity = '0.4';
+        giveDiv.appendChild(give);
+
+        const recv = document.createElement('button');
+        recv.className = 'trade-res-btn';
+        recv.innerHTML = `${RES_EMOJI[r]} ${r}`;
+        recv.onclick = () => {
+            tradeGet = r;
+            recvDiv.querySelectorAll('.trade-res-btn').forEach(b => b.classList.remove('selected'));
+            recv.classList.add('selected');
+        };
+        recvDiv.appendChild(recv);
+    });
+
+    document.getElementById('trade-overlay').classList.remove('hidden');
+}
+
+function closeTrade() {
+    document.getElementById('trade-overlay').classList.add('hidden');
+}
+
+function confirmTrade() {
+    if (!tradeGive || !tradeGet || tradeGive === tradeGet) {
+        setStatus('Select a resource to give and one to receive.'); return;
+    }
+    const p = G.players[G.currentPlayer];
+    if (p.resources[tradeGive] < 4) { setStatus('Not enough resources!'); return; }
+    p.resources[tradeGive] -= 4;
+    p.resources[tradeGet]++;
+    addLog(`${p.name} traded 4 ${tradeGive} for 1 ${tradeGet}.`);
+    closeTrade();
+    updateUI();
+}
+
+// ── HELPERS ────────────────────────────────────────────────
+function canAfford(cost) {
+    const p = G.players[G.currentPlayer];
+    return Object.entries(cost).every(([r,n]) => p.resources[r] >= n);
+}
+
+function payResources(cost) {
+    const p = G.players[G.currentPlayer];
+    Object.entries(cost).forEach(([r,n]) => p.resources[r] -= n);
+}
+
+function canPlaceSettlement(v) {
+    if (v.building) return false;
+    if (G.phase === 'main') {
+        // Must be adjacent to player's road
+        const hasAdjacentRoad = G.edges.some(e =>
+            e.road && e.road.player === G.currentPlayer &&
+            (e.v1 === v.key || e.v2 === v.key)
+        );
+        if (!hasAdjacentRoad) return false;
+    }
+    for (const adj of getAdjacentVertices(v)) {
+        if (adj.building) return false;
+    }
+    return true;
+}
+
+function canPlaceRoad(edge) {
+    const v1 = G.vertexMap[edge.v1], v2 = G.vertexMap[edge.v2];
+    if (!v1 || !v2) return false;
+    for (const v of [v1, v2]) {
+        if (v.building && v.building.player === G.currentPlayer) return true;
+        const adjRoad = G.edges.some(e =>
+            e.road && e.road.player === G.currentPlayer &&
+            (e.v1 === v.key || e.v2 === v.key) && e !== edge
+        );
+        if (adjRoad) return true;
+    }
+    return false;
+}
+
+function getAdjacentVertices(v) {
+    const result = [];
+    G.edges.forEach(e => {
+        if (e.v1 === v.key) { const n = G.vertexMap[e.v2]; if (n) result.push(n); }
+        if (e.v2 === v.key) { const n = G.vertexMap[e.v1]; if (n) result.push(n); }
+    });
+    return result;
+}
+
+function nearestVertex(mx, my, maxDist) {
+    let best = null, bestD = maxDist;
+    G.vertices.forEach(v => {
+        const d = Math.hypot(v.x - mx, v.y - my);
+        if (d < bestD) { bestD = d; best = v; }
+    });
+    return best;
+}
+
+function nearestEdge(mx, my, threshold) {
+    let best = null, bestD = threshold;
+    G.edges.forEach(e => {
+        const v1 = G.vertexMap[e.v1], v2 = G.vertexMap[e.v2];
+        if (!v1 || !v2) return;
+        const mx2 = (v1.x + v2.x) / 2, my2 = (v1.y + v2.y) / 2;
+        const d = Math.hypot(mx2 - mx, my2 - my);
+        if (d < bestD) { bestD = d; best = e; }
+    });
+    return best;
+}
+
+function nearestEdgeAdjacentTo(mx, my, lv) {
+    let best = null, bestD = Infinity;
+    G.edges.forEach(e => {
+        if (e.v1 !== lv.key && e.v2 !== lv.key) return;
+        const v1 = G.vertexMap[e.v1], v2 = G.vertexMap[e.v2];
+        if (!v1 || !v2) return;
+        const mx2 = (v1.x + v2.x) / 2, my2 = (v1.y + v2.y) / 2;
+        const d = Math.hypot(mx2 - mx, my2 - my);
+        if (d < bestD) { bestD = d; best = e; }
+    });
+    return best;
+}
+
+function nearestHex(mx, my) {
+    let best = null, bestD = HEX_SIZE * 1.2;
+    G.hexes.forEach((h, hi) => {
+        const d = Math.hypot(h.cx - mx, h.cy - my);
+        if (d < bestD && h.res !== 'desert') { bestD = d; best = hi; }
+    });
+    return best;
+}
+
+function checkWin() {
+    const p = G.players[G.currentPlayer];
+    if (p.vp >= 10) {
+        document.getElementById('win-text').textContent = `${p.name} Wins! 🎉`;
+        document.getElementById('win-sub').textContent = `${p.vp} Victory Points — First to 10 wins!`;
+        document.getElementById('win-overlay').classList.remove('hidden');
+    }
+}
+
+// ── UI UPDATE ──────────────────────────────────────────────
+function updateUI() {
+    if (!G) return;
+    const p = G.players[G.currentPlayer];
+
+    // Players list
+    const list = document.getElementById('players-list');
+    list.innerHTML = '';
+    G.players.forEach((pl, i) => {
+        const row = document.createElement('div');
+        row.className = 'player-row' + (i === G.currentPlayer ? ' active-player' : '');
+        row.style.setProperty('--pc', pl.color);
+        row.innerHTML = `
+            <div class="player-dot" style="background:${pl.color}"></div>
+            <span class="player-name" style="color:${i===G.currentPlayer?pl.color:'#94a3b8'}">${pl.name}</span>
+            <span class="player-vp">⭐ ${pl.vp}</span>
+        `;
+        list.appendChild(row);
+    });
+
+    // Resources display
+    RESOURCES.forEach(r => {
+        const el = document.getElementById(`r-${r}`);
+        if (el) el.textContent = p.resources[r];
+    });
+
+    // Button states
+    const rolled = G.diceRolled && G.phase === 'main';
+    document.getElementById('btn-roll').disabled    = !(!G.diceRolled && G.phase === 'main');
+    document.getElementById('btn-end').disabled     = !rolled;
+    document.getElementById('btn-settle').disabled  = !rolled || !canAfford(SETTLEMENT_COST);
+    document.getElementById('btn-city').disabled    = !rolled || !canAfford(CITY_COST);
+    document.getElementById('btn-road').disabled    = !rolled || !canAfford(ROAD_COST);
+    document.getElementById('btn-trade').disabled   = !rolled;
+}
+
+function addLog(msg, cls = '') {
+    if (!G) return;
+    const div = document.getElementById('game-log');
+    const entry = document.createElement('div');
+    entry.className = 'log-entry' + (cls ? ` ${cls}` : '');
+    entry.textContent = msg;
+    div.prepend(entry);
+    if (div.children.length > 50) div.removeChild(div.lastChild);
+}
+
+function setStatus(msg) {
+    const bar = document.getElementById('status-bar');
+    bar.innerHTML = msg.replace(/(\w+):/g, '<span>$1:</span>');
+    document.getElementById('phase-label').textContent = G ? (G.phase === 'setup' ? `Setup Phase ${G.setupPhase}` : `Main Game · Round`) : '';
+}
+
+// Initial UI
+updateUI();
+</script>
+</body>
+</html>

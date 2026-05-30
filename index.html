@@ -3,48 +3,470 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Interactive Portfolio</title>
+    <title>Nathan Janit — Software Engineer</title>
+    <meta name="description" content="Nathan Janit — Software Engineer, World Champion VEX Robotics, UW CS + WLU BBA Double Degree. Building AI systems, games, and robotics.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <nav>
-        <div class="logo">MyPortfolio</div>
-        <ul class="nav-links">
-            <li><a href="index.html">Home</a></li>
-            <li><a href="#work">Experience</a></li>
-            <li><a href="#education">Education</a></li>
-            <li><a href="projects.html" class="btn">Playable Projects</a></li>
-        </ul>
-    </nav>
 
-    <header class="hero">
-        <h1>Hi, I'm a Software Engineer</h1>
-        <p>I build games, AI tools, and data visualizations.</p>
-    </header>
+<!-- NAV -->
+<nav id="navbar">
+    <a href="#" class="nav-logo" id="logo-click" title="Click me 5 times...">NJ</a>
+    <ul class="nav-links" id="nav-links">
+        <li><a href="#experience" class="nav-item">Experience</a></li>
+        <li><a href="#projects" class="nav-item">Projects</a></li>
+        <li><a href="#skills" class="nav-item">Skills</a></li>
+        <li><a href="#contact" class="nav-item">Contact</a></li>
+        <li><a href="resume/Nathan_Janit.pdf" target="_blank" class="nav-btn">Resume ↗</a></li>
+    </ul>
+    <button class="nav-toggle" id="nav-toggle" aria-label="Toggle menu">
+        <span></span><span></span><span></span>
+    </button>
+</nav>
 
-    <section id="work" class="container">
-        <h2>Work Experience</h2>
-        <div class="card">
-            <h3>Software Engineer Intern @ TechCorp</h3>
-            <p><em>May 2024 - Aug 2024</em></p>
-            <ul>
-                <li>Developed high-performance data pipelines using Python.</li>
-                <li>Optimized C++ backend services, reducing latency by 15%.</li>
-            </ul>
+<!-- HERO -->
+<section id="hero">
+    <canvas id="hero-canvas"></canvas>
+    <div class="hero-content">
+        <div class="hero-badge">
+            <span class="badge-dot"></span>
+            Available for Summer 2026 Co-op
         </div>
-    </section>
-
-    <section id="education" class="container">
-        <h2>Education</h2>
-        <div class="card">
-            <h3>B.S. in Computer Science</h3>
-            <p><em>University of Technology | Graduating 2026</em></p>
-            <p>Relevant Coursework: Data Structures, AI, Computer Graphics.</p>
+        <h1 class="hero-name">Nathan Janit</h1>
+        <div class="hero-typewriter">
+            <span id="typewriter"></span><span class="cursor">|</span>
         </div>
-    </section>
+        <p class="hero-desc">
+            UW Computer Science <span class="x-sep">×</span> WLU Business Administration<br>
+            Building things that matter — from World&nbsp;Champion robots to AI scoring systems.
+        </p>
+        <div class="hero-actions">
+            <a href="#projects" class="btn-primary">View Projects</a>
+            <a href="#contact" class="btn-secondary">Get In Touch</a>
+        </div>
+        <div class="hero-socials">
+            <a href="https://github.com/Nate457" target="_blank" class="social-link">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+                github.com/Nate457
+            </a>
+            <a href="mailto:njanit@uwaterloo.ca" class="social-link">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 7L2 7"/></svg>
+                njanit@uwaterloo.ca
+            </a>
+        </div>
+    </div>
+    <div class="scroll-hint">
+        <span>scroll</span>
+        <div class="scroll-line"></div>
+    </div>
+</section>
 
-    <footer>
-        <p>© 2026 My Portfolio. Built with HTML, CSS, PyScript, and WebAssembly.</p>
-    </footer>
+<!-- STATS -->
+<section id="stats">
+    <div class="container">
+        <div class="stats-grid">
+            <div class="stat-card" data-aos="fade-up">
+                <div class="stat-icon">🏆</div>
+                <div class="stat-label">World Division<br><strong>Champion</strong></div>
+                <div class="stat-sub">VEX Robotics University</div>
+            </div>
+            <div class="stat-card" data-aos="fade-up" data-aos-delay="100">
+                <div class="stat-num">40+</div>
+                <div class="stat-label">Competition<br><strong>Awards</strong></div>
+                <div class="stat-sub">Ontario's largest VRC program</div>
+            </div>
+            <div class="stat-card" data-aos="fade-up" data-aos-delay="200">
+                <div class="stat-num gpa-hover" title="100% in MATH 145 🤫">85.9</div>
+                <div class="stat-label">Cumulative<br><strong>GPA</strong></div>
+                <div class="stat-sub">5× Term Distinction</div>
+            </div>
+            <div class="stat-card" data-aos="fade-up" data-aos-delay="300">
+                <div class="stat-num">3×</div>
+                <div class="stat-label">Faculty of Math<br><strong>Scholar</strong></div>
+                <div class="stat-sub">President's Scholarship</div>
+            </div>
+            <div class="stat-card" data-aos="fade-up" data-aos-delay="400">
+                <div class="stat-num">2</div>
+                <div class="stat-label">Degrees<br><strong>Simultaneously</strong></div>
+                <div class="stat-sub">CS + BBA, co-op</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- EXPERIENCE -->
+<section id="experience">
+    <div class="container">
+        <div class="section-header">
+            <h2 class="section-title">Experience</h2>
+            <div class="section-line"></div>
+        </div>
+        <div class="timeline">
+
+            <div class="tl-item" data-aos="fade-up">
+                <div class="tl-meta">
+                    <span class="tl-date">Jan 2025 — Apr 2025</span>
+                    <div class="tl-tags">
+                        <span>Omniverse</span><span>USD</span><span>XR</span><span>Gaussian Splatting</span>
+                    </div>
+                </div>
+                <div class="tl-card">
+                    <div class="tl-role">
+                        <h3>Omniverse Testing Coordinator</h3>
+                        <span class="tl-company">Accenture @ Eclipse Automation · Cambridge, ON</span>
+                    </div>
+                    <ul class="tl-bullets">
+                        <li>Debugged a web-based USD conversion pipeline, reducing error rates and downtime by <mark>80%</mark>.</li>
+                        <li>Built Omniverse workflows using Gaussian Splatting; extended viewport with custom <strong>Kit extensions</strong>.</li>
+                        <li>Created 3D animations of industrial machines in Blender + SolidWorks and integrated into Omniverse.</li>
+                        <li>Presented XR visualizations using the <strong>Apple Vision Pro</strong> and Magic Leap headsets.</li>
+                        <li>Developed a dynamic layout planning extension with Excel VBA + JS to automate workspace config.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="tl-item" data-aos="fade-up">
+                <div class="tl-meta">
+                    <span class="tl-date">May 2024 — Aug 2024</span>
+                    <div class="tl-tags">
+                        <span>Python</span><span>Power Automate</span><span>Excel VBA</span><span>CV</span>
+                    </div>
+                </div>
+                <div class="tl-card">
+                    <div class="tl-role">
+                        <h3>FP&A Intern</h3>
+                        <span class="tl-company">Varicent · Toronto, ON</span>
+                    </div>
+                    <ul class="tl-bullets">
+                        <li>Built a computer vision–based bank reconciliation workflow in Power Automate, saving <mark>5 hours/cycle</mark>.</li>
+                        <li>Designed a discrepancy algorithm as an Excel macro to flag out-of-place entries in budget plans.</li>
+                        <li>Programmed an Excel workflow to scrape financial filings of top public SaaS companies.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="tl-item" data-aos="fade-up">
+                <div class="tl-meta">
+                    <span class="tl-date">May 2021 — Present</span>
+                    <div class="tl-tags">
+                        <span>PHP</span><span>Google APIs</span><span>CAD</span><span>Founder</span>
+                    </div>
+                </div>
+                <div class="tl-card">
+                    <div class="tl-role">
+                        <h3>Founder</h3>
+                        <span class="tl-company">Silver Owl Robotics · Richmond Hill, ON</span>
+                    </div>
+                    <ul class="tl-bullets">
+                        <li>Founded <strong>Ontario's largest VRC robotics program</strong>, earning <mark>40+ awards</mark> including World Division Champion.</li>
+                        <li>Built company website + customer portal in PHP; manages registrations and payments.</li>
+                        <li>Automated operations via Google Sheets APIs for live budgeting, payroll, and scheduling.</li>
+                        <li>Taught CAD and robotics design using Autodesk and 3D printing to hundreds of students.</li>
+                    </ul>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+<!-- EDUCATION -->
+<section id="education">
+    <div class="container">
+        <div class="section-header">
+            <h2 class="section-title">Education</h2>
+            <div class="section-line"></div>
+        </div>
+        <div class="edu-grid">
+            <div class="edu-card" data-aos="fade-up">
+                <div class="edu-top">
+                    <div class="edu-badge uw-badge">UW</div>
+                    <div>
+                        <h3>Bachelor of Computer Science</h3>
+                        <span class="edu-school">University of Waterloo · Honours Co-operative Program</span>
+                        <span class="edu-year">Sept 2023 — April 2027</span>
+                    </div>
+                </div>
+                <div class="edu-stats">
+                    <div class="edu-stat">
+                        <strong>85.88</strong>
+                        <small>Cumulative GPA</small>
+                    </div>
+                    <div class="edu-stat">
+                        <strong>5×</strong>
+                        <small>Term Distinction</small>
+                    </div>
+                    <div class="edu-stat">
+                        <strong>100%</strong>
+                        <small>MATH 145 (Advanced)</small>
+                    </div>
+                </div>
+                <div class="edu-awards">
+                    <span class="edu-award">🏅 President's Scholarship of Distinction (2024)</span>
+                    <span class="edu-award">🎓 Faculty of Mathematics Scholarship (2024, 2025, 2026)</span>
+                </div>
+                <div class="edu-courses">
+                    <span class="course-tag">MATH 145 — 100</span>
+                    <span class="course-tag">ENGL 109 — 94</span>
+                    <span class="course-tag">STAT 230 — 93</span>
+                    <span class="course-tag">MATH 239 — 93</span>
+                    <span class="course-tag">CS 135 — 90</span>
+                    <span class="course-tag">MATH 148 — 92</span>
+                </div>
+            </div>
+            <div class="edu-card" data-aos="fade-up" data-aos-delay="150">
+                <div class="edu-top">
+                    <div class="edu-badge wlu-badge">WLU</div>
+                    <div>
+                        <h3>Bachelor of Business Administration</h3>
+                        <span class="edu-school">Wilfrid Laurier University · Co-operative Program</span>
+                        <span class="edu-year">Sept 2023 — April 2027</span>
+                    </div>
+                </div>
+                <div class="edu-double-note">
+                    <div class="double-icon">⊕</div>
+                    <p>Simultaneously completing <strong>two full undergraduate degrees</strong> through the prestigious UW/WLU Double Degree joint program — one of fewer than 100 students admitted annually.</p>
+                </div>
+                <div class="edu-awards">
+                    <span class="edu-award">📊 Coursework: Accounting, Finance, Marketing, Org. Behaviour, Business Law</span>
+                    <span class="edu-award">🤝 Two co-op terms completed across tech and finance sectors</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- PROJECTS -->
+<section id="projects">
+    <div class="container">
+        <div class="section-header">
+            <h2 class="section-title">Projects</h2>
+            <div class="section-line"></div>
+        </div>
+        <div class="projects-grid">
+
+            <div class="proj-card featured" data-aos="fade-up">
+                <div class="proj-header">
+                    <span class="proj-icon">🤖</span>
+                    <div class="proj-links">
+                        <a href="cv-demo.html" class="proj-link demo-link">Live Demo →</a>
+                    </div>
+                </div>
+                <h3>Real-Time Automated Scoring</h3>
+                <p>Containerized web app that autonomously scores VEX robotics competitions using real-time CV. Virtual twin reconstructed via multi-camera object tracking; probabilistic consensus filter resolves detection inconsistencies.</p>
+                <div class="proj-tags">
+                    <span>Rust</span><span>Kubernetes</span><span>DeepStream</span><span>OpenCV</span><span>WASM</span><span>Docker</span>
+                </div>
+                <div class="proj-footer">
+                    <span class="proj-date">March 2025 — Present</span>
+                    <span class="proj-status active">In Progress</span>
+                </div>
+            </div>
+
+            <div class="proj-card featured" data-aos="fade-up" data-aos-delay="100">
+                <div class="proj-header">
+                    <span class="proj-icon">🎲</span>
+                    <div class="proj-links">
+                        <a href="watan.html" class="proj-link demo-link">Play Game →</a>
+                    </div>
+                </div>
+                <h3>Watan — Settlers of Catan</h3>
+                <p>Networked multiplayer Settlers of Catan in C++20 with no libraries — full game logic, board management, and server-side state. Play a web recreation built in JavaScript with full rules.</p>
+                <div class="proj-tags">
+                    <span>C++20</span><span>Networking</span><span>X11</span><span>Linux</span>
+                </div>
+                <div class="proj-footer">
+                    <span class="proj-date">Nov — Dec 2025</span>
+                    <span class="proj-status done">Complete</span>
+                </div>
+            </div>
+
+            <div class="proj-card" data-aos="fade-up" data-aos-delay="50">
+                <div class="proj-header">
+                    <span class="proj-icon">🏆</span>
+                    <div class="proj-links">
+                        <span class="proj-award-badge">🥇 World #1</span>
+                    </div>
+                </div>
+                <h3>UWAT VEXU Robotics</h3>
+                <p>Competition robotics for the VEX University division. Implemented Pure Pursuit path following (+20% autonomous accuracy) and PID closed-loop control (−15% angle drift). Ranked 1st out of 100+ teams worldwide.</p>
+                <div class="proj-tags">
+                    <span>C++17</span><span>PROS</span><span>PID Control</span><span>Pure Pursuit</span><span>Odometry</span>
+                </div>
+                <div class="proj-footer">
+                    <span class="proj-date">Dec 2023 — May 2024</span>
+                    <span class="proj-status done">World Champion</span>
+                </div>
+            </div>
+
+            <div class="proj-card" data-aos="fade-up" data-aos-delay="150">
+                <div class="proj-header">
+                    <span class="proj-icon">🔍</span>
+                    <div class="proj-links">
+                        <span class="proj-award-badge">🥇 CXC Hackathon Winner</span>
+                    </div>
+                </div>
+                <h3>Bot Detection — ML Model</h3>
+                <p>PyTorch model detecting non-human accounts from transaction and network graph data. Won the OwnersBox section of the 2024 CXC Hackathon for best technical implementation.</p>
+                <div class="proj-tags">
+                    <span>PyTorch</span><span>MySQL</span><span>Python</span><span>Graph Analysis</span>
+                </div>
+                <div class="proj-footer">
+                    <span class="proj-date">Feb — Mar 2024</span>
+                    <span class="proj-status award">Hackathon Winner</span>
+                </div>
+            </div>
+
+            <div class="proj-card" data-aos="fade-up" data-aos-delay="200">
+                <div class="proj-header">
+                    <span class="proj-icon">🕹️</span>
+                    <div class="proj-links">
+                        <a href="https://github.com/Nate457" target="_blank" class="proj-link">GitHub →</a>
+                    </div>
+                </div>
+                <h3>Spoolunking</h3>
+                <p>Roguelike dungeon crawler with procedural maps, dynamic lighting, directional sprite animation, turn-based combat, and a full save system. Over 3,500 lines of Python built from scratch.</p>
+                <div class="proj-tags">
+                    <span>Python</span><span>Pygame</span><span>Procedural Gen</span><span>OOP</span>
+                </div>
+                <div class="proj-footer">
+                    <span class="proj-date">Personal Project</span>
+                    <span class="proj-status done">Playable</span>
+                </div>
+            </div>
+
+            <div class="proj-card" data-aos="fade-up" data-aos-delay="250">
+                <div class="proj-header">
+                    <span class="proj-icon">🦉</span>
+                    <div class="proj-links">
+                        <span class="proj-link muted">silverowlrobotics.ca</span>
+                    </div>
+                </div>
+                <h3>Silver Owl Portal</h3>
+                <p>Company website and customer portal for Ontario's largest VRC program — 100+ students enrolled. Full-stack with PHP backend handling registrations, payments, and automated team scheduling via Google APIs.</p>
+                <div class="proj-tags">
+                    <span>PHP</span><span>MySQL</span><span>Google Sheets API</span><span>JavaScript</span>
+                </div>
+                <div class="proj-footer">
+                    <span class="proj-date">2021 — Present</span>
+                    <span class="proj-status active">Live</span>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+<!-- SKILLS -->
+<section id="skills">
+    <div class="container">
+        <div class="section-header">
+            <h2 class="section-title">Skills</h2>
+            <div class="section-line"></div>
+        </div>
+        <div class="skills-grid">
+            <div class="skill-group" data-aos="fade-up">
+                <h4 class="skill-group-title">Languages</h4>
+                <div class="skill-tags">
+                    <span class="stag high">Python</span>
+                    <span class="stag high">C++</span>
+                    <span class="stag high">JavaScript</span>
+                    <span class="stag med">Rust</span>
+                    <span class="stag med">C</span>
+                    <span class="stag med">PHP</span>
+                </div>
+            </div>
+            <div class="skill-group" data-aos="fade-up" data-aos-delay="100">
+                <h4 class="skill-group-title">AI / Computer Vision</h4>
+                <div class="skill-tags">
+                    <span class="stag high">PyTorch</span>
+                    <span class="stag high">OpenCV</span>
+                    <span class="stag med">TensorFlow</span>
+                    <span class="stag med">ONNX Runtime</span>
+                    <span class="stag med">DeepStream</span>
+                    <span class="stag med">NumPy</span>
+                </div>
+            </div>
+            <div class="skill-group" data-aos="fade-up" data-aos-delay="150">
+                <h4 class="skill-group-title">Systems & DevOps</h4>
+                <div class="skill-tags">
+                    <span class="stag high">Git</span>
+                    <span class="stag high">Linux</span>
+                    <span class="stag med">Kubernetes</span>
+                    <span class="stag med">Docker</span>
+                    <span class="stag med">Axum/Tokio</span>
+                    <span class="stag low">PROS (VEX)</span>
+                </div>
+            </div>
+            <div class="skill-group" data-aos="fade-up" data-aos-delay="200">
+                <h4 class="skill-group-title">Tools & Platforms</h4>
+                <div class="skill-tags">
+                    <span class="stag high">NVIDIA Omniverse</span>
+                    <span class="stag med">Apple Vision Pro</span>
+                    <span class="stag med">AutoDesk</span>
+                    <span class="stag med">SolidWorks</span>
+                    <span class="stag med">Power BI</span>
+                    <span class="stag med">Blender</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CONTACT -->
+<section id="contact">
+    <div class="container">
+        <div class="contact-inner" data-aos="fade-up">
+            <h2 class="contact-heading">Let's Build Something</h2>
+            <p class="contact-sub">Actively seeking <strong>Summer 2026 co-op</strong> opportunities in software engineering, AI/ML, or robotics. Always happy to chat about interesting projects.</p>
+            <div class="contact-links">
+                <a href="mailto:njanit@uwaterloo.ca" class="contact-btn primary-contact">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 7L2 7"/></svg>
+                    njanit@uwaterloo.ca
+                </a>
+                <a href="https://github.com/Nate457" target="_blank" class="contact-btn">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+                    github.com/Nate457
+                </a>
+                <a href="tel:4165293108" class="contact-btn">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81a19.79 19.79 0 01-3.07-8.68A2 2 0 012.18 1h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.91 8.14a16 16 0 006 6l1.5-1.5a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 14.92z"/></svg>
+                    (416) 529-3108
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- FOOTER -->
+<footer id="footer">
+    <div class="footer-inner">
+        <span class="footer-name">Nathan Janit</span>
+        <span class="footer-sep">·</span>
+        <span class="footer-built">Built with HTML, CSS & JS</span>
+        <span class="footer-sep">·</span>
+        <a href="https://github.com/Nate457" target="_blank" class="footer-link">github.com/Nate457</a>
+    </div>
+    <p class="footer-secret" id="footer-secret">// 3 easter eggs hidden on this page. ↑↑↓↓←→←→BA is a good start.</p>
+</footer>
+
+<!-- TOAST NOTIFICATION -->
+<div id="toast" class="toast" role="alert"></div>
+
+<!-- EASTER EGG MODAL -->
+<div id="ee-modal" class="ee-modal">
+    <div class="ee-modal-inner">
+        <div id="ee-icon" class="ee-icon">🏆</div>
+        <h2 id="ee-title">WORLD CHAMPION</h2>
+        <p id="ee-msg"></p>
+        <button onclick="document.getElementById('ee-modal').classList.remove('active')">Close</button>
+    </div>
+</div>
+
+<!-- CONFETTI CONTAINER -->
+<div id="confetti-container"></div>
+
+<script src="script.js"></script>
 </body>
 </html>
