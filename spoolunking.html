@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spoolunking — The Tangled Caves | Nathan Janit</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: #07090f; color: #e2e8f0; font-family: 'Inter', sans-serif; min-height: 100vh; }
+
+.topbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 24px; background: rgba(7,9,15,0.95);
+    border-bottom: 1px solid rgba(255,255,255,0.07);
+    position: sticky; top: 0; z-index: 100;
+}
+.topbar h1 { font-size: 1rem; font-weight: 800; }
+.topbar h1 span { color: #a855f7; }
+.topbar-right { display: flex; gap: 16px; align-items: center; }
+.topbar-right a { color: #64748b; text-decoration: none; font-size: 0.8rem; transition: color 0.2s; }
+.topbar-right a:hover { color: #00d4ff; }
+
+.layout { display: flex; gap: 0; min-height: calc(100vh - 48px); }
+
+/* GAME PANEL */
+.game-panel {
+    flex: 1; display: flex; flex-direction: column; align-items: center;
+    justify-content: center; padding: 24px; background: #07090f;
+    min-height: calc(100vh - 48px);
+}
+
+.game-frame-wrapper {
+    position: relative; width: 100%; max-width: 960px;
+    background: #000; border-radius: 12px; overflow: hidden;
+    border: 1px solid rgba(168,85,247,0.3);
+    box-shadow: 0 0 60px rgba(168,85,247,0.15);
+}
+
+.game-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 16px; background: #0a0a14;
+    border-bottom: 1px solid rgba(168,85,247,0.2);
+}
+.game-title-bar { display: flex; align-items: center; gap: 10px; }
+.game-title-bar span { font-size: 0.82rem; font-weight: 600; color: #a855f7; }
+.game-dots { display: flex; gap: 6px; }
+.dot { width: 10px; height: 10px; border-radius: 50%; }
+.dot.red { background: #ef4444; }
+.dot.yellow { background: #f59e0b; }
+.dot.green { background: #10b981; }
+.fullscreen-btn {
+    background: rgba(168,85,247,0.1); border: 1px solid rgba(168,85,247,0.3);
+    color: #a855f7; padding: 4px 12px; border-radius: 5px;
+    font-size: 0.72rem; font-weight: 600; cursor: pointer; transition: all 0.2s;
+    font-family: 'Inter', sans-serif;
+}
+.fullscreen-btn:hover { background: rgba(168,85,247,0.2); }
+
+#game-iframe {
+    width: 100%; aspect-ratio: 16/9; border: none; display: block;
+    background: #000;
+}
+
+.loading-overlay {
+    position: absolute; inset: 0; background: #000;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 16px; z-index: 10; transition: opacity 0.5s ease;
+}
+.loading-overlay.hidden { opacity: 0; pointer-events: none; }
+.load-title { font-size: 1.5rem; font-weight: 800; color: #a855f7; }
+.load-sub { font-size: 0.85rem; color: #64748b; font-family: 'JetBrains Mono', monospace; }
+.load-bar-bg { width: 240px; height: 4px; background: #1a1a2e; border-radius: 2px; overflow: hidden; }
+.load-bar { height: 100%; background: linear-gradient(to right, #a855f7, #00d4ff); border-radius: 2px; animation: load-progress 4s ease forwards; }
+@keyframes load-progress { from { width: 0; } to { width: 100%; } }
+.load-hint { font-size: 0.72rem; color: #374151; font-family: 'JetBrains Mono', monospace; }
+
+/* SIDEBAR */
+.sidebar {
+    width: 300px; flex-shrink: 0; background: #090c16;
+    border-left: 1px solid rgba(255,255,255,0.06);
+    overflow-y: auto; padding: 0;
+}
+.sb-section { padding: 20px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+.sb-label { font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; color: #374151; margin-bottom: 12px; }
+
+/* Game info */
+.game-icon { font-size: 3rem; margin-bottom: 10px; }
+.game-name { font-size: 1.3rem; font-weight: 800; color: #fff; margin-bottom: 4px; }
+.game-tagline { font-size: 0.82rem; color: #64748b; line-height: 1.5; margin-bottom: 12px; }
+.game-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.gtag {
+    font-size: 0.68rem; padding: 3px 10px; border-radius: 100px;
+    background: rgba(168,85,247,0.1); border: 1px solid rgba(168,85,247,0.25);
+    color: #a855f7; font-weight: 500;
+}
+
+/* Lore */
+.lore-text { font-size: 0.82rem; color: #94a3b8; line-height: 1.7; }
+.lore-text p { margin-bottom: 10px; }
+.lore-text em { color: #a855f7; font-style: normal; font-weight: 600; }
+
+/* Controls */
+.controls-grid { display: grid; grid-template-columns: auto 1fr; gap: 6px 12px; font-size: 0.8rem; }
+.ctrl-key {
+    font-family: 'JetBrains Mono', monospace; font-size: 0.7rem;
+    background: #151525; border: 1px solid #2a2a45; color: #a855f7;
+    padding: 2px 8px; border-radius: 4px; white-space: nowrap; justify-self: start; align-self: center;
+}
+.ctrl-desc { color: #64748b; align-self: center; }
+
+/* Enemies */
+.enemy-list { display: flex; flex-direction: column; gap: 8px; }
+.enemy-item {
+    display: flex; gap: 10px; align-items: center; padding: 8px;
+    background: rgba(255,255,255,0.03); border-radius: 6px;
+    border: 1px solid rgba(255,255,255,0.05);
+}
+.enemy-icon { font-size: 1.4rem; flex-shrink: 0; }
+.enemy-name { font-size: 0.78rem; font-weight: 600; color: #e2e8f0; }
+.enemy-desc { font-size: 0.7rem; color: #64748b; }
+
+/* Credit */
+.credit-text { font-size: 0.75rem; color: #374151; line-height: 1.6; }
+.credit-text a { color: #64748b; text-decoration: none; }
+.credit-text a:hover { color: #a855f7; }
+
+/* Fullscreen */
+.fullscreen .game-panel { padding: 0; }
+.fullscreen .sidebar { display: none; }
+.fullscreen .game-frame-wrapper { max-width: 100%; border-radius: 0; border: none; box-shadow: none; }
+.fullscreen #game-iframe { aspect-ratio: unset; height: calc(100vh - 48px); }
+
+@media (max-width: 900px) { .sidebar { display: none; } }
+    </style>
+</head>
+<body>
+
+<div class="topbar">
+    <h1>🧶 <span>Spoolunking</span> — The Tangled Caves</h1>
+    <div class="topbar-right">
+        <span style="font-size:0.75rem;color:#374151;font-family:'JetBrains Mono',monospace;">Python · Pygame → WASM</span>
+        <a href="index.html">← Portfolio</a>
+    </div>
+</div>
+
+<div class="layout" id="layout">
+
+    <div class="game-panel">
+        <div class="game-frame-wrapper">
+            <div class="game-header">
+                <div class="game-title-bar">
+                    <div class="game-dots"><div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div></div>
+                    <span>spoolunking — pygame 2.x / python 3.12</span>
+                </div>
+                <button class="fullscreen-btn" onclick="toggleFullscreen()">⛶ Fullscreen</button>
+            </div>
+
+            <div style="position:relative;">
+                <iframe id="game-iframe" src="spoolunking/index.html" allowfullscreen
+                    sandbox="allow-scripts allow-same-origin allow-pointer-lock"
+                    onload="document.getElementById('load-overlay').classList.add('hidden')">
+                </iframe>
+                <div class="loading-overlay" id="load-overlay">
+                    <div class="game-icon">🧶</div>
+                    <div class="load-title">Spoolunking</div>
+                    <div class="load-sub">Compiling Python → WASM...</div>
+                    <div class="load-bar-bg"><div class="load-bar"></div></div>
+                    <div class="load-hint">First load downloads ~2MB. Subsequent loads are cached.</div>
+                </div>
+            </div>
+        </div>
+
+        <p style="font-size:0.7rem;color:#374151;margin-top:10px;font-family:'JetBrains Mono',monospace;text-align:center;">
+            If the game doesn't start, click inside the window and wait ~10s for the Python runtime to load.
+        </p>
+    </div>
+
+    <div class="sidebar">
+
+        <div class="sb-section">
+            <div class="game-icon">🧶</div>
+            <div class="game-name">Spoolunking</div>
+            <div class="game-tagline">A yarn-based roguelike dungeon crawler built from scratch in Python. Navigate three tiers of dungeon, fight enemies, and defeat the Final Tangle.</div>
+            <div class="game-tags">
+                <span class="gtag">Roguelike</span>
+                <span class="gtag">Dungeon Crawler</span>
+                <span class="gtag">Python</span>
+                <span class="gtag">Pygame</span>
+                <span class="gtag">3,500+ Lines</span>
+            </div>
+        </div>
+
+        <div class="sb-section">
+            <div class="sb-label">Lore</div>
+            <div class="lore-text">
+                <p>Deep beneath the <em>Woolworks</em>, the ancient dungeons stir. <em>Thred</em> — last of the Yarn Weavers — descends into the dark in search of the Spool of Origins, stolen by the Wine Wraiths.</p>
+                <p>The caves are alive. The walls remember. The slimes multiply. The cats... are just cats. Vicious, unhinged cats.</p>
+                <p>Three tiers await: <em>Upper Caverns</em>, <em>Sunken Vaults</em>, and <em>The Final Tangle</em> — where the boss waits.</p>
+            </div>
+        </div>
+
+        <div class="sb-section">
+            <div class="sb-label">Controls</div>
+            <div class="controls-grid">
+                <span class="ctrl-key">WASD / ↑↓←→</span><span class="ctrl-desc">Move Thred</span>
+                <span class="ctrl-key">Left Click</span><span class="ctrl-desc">Attack (directional)</span>
+                <span class="ctrl-key">🎒 button</span><span class="ctrl-desc">Open inventory</span>
+                <span class="ctrl-key">ESC</span><span class="ctrl-desc">Pause / save</span>
+                <span class="ctrl-key">New Game</span><span class="ctrl-desc">Start a fresh run</span>
+            </div>
+        </div>
+
+        <div class="sb-section">
+            <div class="sb-label">Enemies</div>
+            <div class="enemy-list">
+                <div class="enemy-item">
+                    <div class="enemy-icon">🍷</div>
+                    <div><div class="enemy-name">Wine Wraith</div><div class="enemy-desc">Throws bottles. Keeps distance. Drops Wine Drops.</div></div>
+                </div>
+                <div class="enemy-item">
+                    <div class="enemy-icon">🐱</div>
+                    <div><div class="enemy-name">Cat Sentinel</div><div class="enemy-desc">Aggressive melee. Charges on sight. Drops Cat Claws.</div></div>
+                </div>
+                <div class="enemy-item">
+                    <div class="enemy-icon">🟢</div>
+                    <div><div class="enemy-name">Slime</div><div class="enemy-desc">Slow but tanky. Drops Slime for crafting. Comes in Red, Green, White.</div></div>
+                </div>
+                <div class="enemy-item">
+                    <div class="enemy-icon">💀</div>
+                    <div><div class="enemy-name">Final Boss</div><div class="enemy-desc">The Wine Wraith King. HP 40. Floor 3.</div></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="sb-section">
+            <div class="sb-label">Weapons</div>
+            <div class="controls-grid">
+                <span class="ctrl-key">Punch</span><span class="ctrl-desc">Default, instant, short range</span>
+                <span class="ctrl-key">Claw</span><span class="ctrl-desc">Craft with Slime + Cat Claws</span>
+                <span class="ctrl-key">Ball</span><span class="ctrl-desc">Projectile, craft with 6 Slime</span>
+                <span class="ctrl-key">Straw</span><span class="ctrl-desc">Fast shots, unlocked in inventory</span>
+            </div>
+        </div>
+
+        <div class="sb-section">
+            <div class="sb-label">About</div>
+            <div class="credit-text">
+                Built by <a href="index.html">Nathan Janit</a> in Python + Pygame (2021–2025).<br>
+                Custom sprites, procedural maps, dynamic lighting, directional animation, save system.<br><br>
+                Compiled to WebAssembly via <a href="https://pygame-web.github.io" target="_blank">Pygbag</a> so it runs in your browser.
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+function toggleFullscreen() {
+    document.body.classList.toggle('fullscreen');
+    const btn = document.querySelector('.fullscreen-btn');
+    btn.textContent = document.body.classList.contains('fullscreen') ? '✕ Exit Fullscreen' : '⛶ Fullscreen';
+}
+
+// Hide loading overlay once iframe fires onload, but also set a timeout fallback
+setTimeout(() => {
+    document.getElementById('load-overlay')?.classList.add('hidden');
+}, 12000);
+</script>
+
+</body>
+</html>
