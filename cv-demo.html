@@ -3,801 +3,855 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VEX CV Scoring Demo | Nathan Janit</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <title>VEX CV Scoring — DeepStream Demo | Nathan Janit</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
     <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
-body { background: #050b18; color: #e2e8f0; font-family: 'Inter', sans-serif; min-height: 100vh; overflow-x: hidden; }
+body { background: #000; color: #e2e8f0; font-family: 'Inter', sans-serif; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
 
+/* TOP BAR */
 .topbar {
     display: flex; align-items: center; justify-content: space-between;
-    padding: 14px 24px; background: rgba(5,11,24,0.95);
-    border-bottom: 1px solid rgba(0,212,255,0.15); position: sticky; top: 0; z-index: 100;
+    padding: 8px 16px; background: #0a0a0a; border-bottom: 1px solid #1a1a1a;
+    flex-shrink: 0; height: 44px; z-index: 10;
 }
-.topbar h1 { font-size: 1rem; font-weight: 800; }
-.topbar h1 span { color: #00d4ff; }
-.topbar-right { display: flex; gap: 16px; align-items: center; }
-.status-dot { width: 8px; height: 8px; border-radius: 50%; background: #10b981; animation: pulse-green 1.5s ease infinite; }
-@keyframes pulse-green { 0%,100% { box-shadow: 0 0 0 0 rgba(16,185,129,0.7); } 70% { box-shadow: 0 0 0 6px rgba(16,185,129,0); } }
-.status-label { font-size: 0.78rem; color: #10b981; font-family: 'JetBrains Mono', monospace; }
+.topbar-left { display: flex; align-items: center; gap: 16px; }
+.topbar h1 { font-size: 0.85rem; font-weight: 700; color: #fff; letter-spacing: 0.3px; }
+.topbar h1 span { color: #00ff88; }
+.rec-dot { width: 8px; height: 8px; border-radius: 50%; background: #ef4444; animation: rec-blink 1s step-end infinite; }
+@keyframes rec-blink { 50% { opacity: 0; } }
+.topbar-right { display: flex; gap: 16px; align-items: center; font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; color: #555; }
+.topbar-right span { color: #00ff88; }
+a.back-link { color: #555; text-decoration: none; font-size: 0.75rem; font-family: 'Inter',sans-serif; }
+a.back-link:hover { color: #00d4ff; }
 
-.layout { display: flex; height: calc(100vh - 53px); }
+/* MAIN LAYOUT */
+.main { display: flex; flex: 1; overflow: hidden; }
 
-/* LEFT: field view */
-.field-panel { flex: 1; position: relative; overflow: hidden; background: #0a1020; }
-canvas#fieldCanvas { display: block; width: 100%; height: 100%; }
+/* CAMERA FEED AREA */
+.feed-area { flex: 1; position: relative; background: #000; overflow: hidden; }
 
-/* Scan line overlay */
-.scan-overlay { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
-.scan-line {
-    position: absolute; left: 0; right: 0; height: 2px;
-    background: linear-gradient(to right, transparent, rgba(0,212,255,0.4), transparent);
-    animation: scan 4s linear infinite;
+/* The main canvas — renders the camera feed simulation */
+#mainCanvas { display: block; width: 100%; height: 100%; image-rendering: pixelated; }
+
+/* HUD overlays */
+.hud-tl {
+    position: absolute; top: 12px; left: 12px;
+    font-family: 'JetBrains Mono', monospace; font-size: 0.68rem; color: rgba(0,255,136,0.9);
+    text-shadow: 0 0 8px rgba(0,255,136,0.5); pointer-events: none;
+    display: flex; flex-direction: column; gap: 2px;
 }
-@keyframes scan { from { top: 0; } to { top: 100%; } }
-
-.corner-overlay { position: absolute; inset: 0; pointer-events: none; }
-.corner { position: absolute; width: 24px; height: 24px; border-color: rgba(0,212,255,0.5); border-style: solid; }
-.corner.tl { top:12px; left:12px; border-width: 2px 0 0 2px; }
-.corner.tr { top:12px; right:12px; border-width: 2px 2px 0 0; }
-.corner.bl { bottom:12px; left:12px; border-width: 0 0 2px 2px; }
-.corner.br { bottom:12px; right:12px; border-width: 0 2px 2px 0; }
-
-/* Camera label */
-.cam-label {
-    position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
-    background: rgba(0,212,255,0.1); border: 1px solid rgba(0,212,255,0.3);
-    color: #00d4ff; font-size: 0.7rem; font-family: 'JetBrains Mono', monospace;
-    padding: 4px 12px; border-radius: 100px; pointer-events: none;
+.hud-tr {
+    position: absolute; top: 12px; right: 12px;
+    font-family: 'JetBrains Mono', monospace; font-size: 0.68rem; color: rgba(255,255,255,0.5);
+    text-align: right; pointer-events: none; display: flex; flex-direction: column; gap: 2px;
 }
-.fps-label {
-    position: absolute; bottom: 44px; left: 16px;
-    color: rgba(0,212,255,0.6); font-family: 'JetBrains Mono', monospace; font-size: 0.7rem;
+.hud-bl {
+    position: absolute; bottom: 12px; left: 12px;
+    font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; color: rgba(255,255,255,0.4);
+    pointer-events: none; display: flex; flex-direction: column; gap: 2px;
 }
-.frame-label {
-    position: absolute; bottom: 44px; right: 16px;
-    color: rgba(255,255,255,0.3); font-family: 'JetBrains Mono', monospace; font-size: 0.7rem;
+.hud-br {
+    position: absolute; bottom: 12px; right: 12px;
+    font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; color: rgba(255,255,255,0.4);
+    text-align: right; pointer-events: none;
 }
 
-/* RIGHT: telemetry */
-.telemetry { width: 300px; flex-shrink: 0; background: rgba(5,11,24,0.95); border-left: 1px solid rgba(0,212,255,0.1); overflow-y: auto; }
+/* Crosshair corners */
+.corner { position: absolute; width: 20px; height: 20px; pointer-events: none; }
+.corner.tl { top: 8px; left: 8px; border-top: 1px solid rgba(0,255,136,0.4); border-left: 1px solid rgba(0,255,136,0.4); }
+.corner.tr { top: 8px; right: 8px; border-top: 1px solid rgba(0,255,136,0.4); border-right: 1px solid rgba(0,255,136,0.4); }
+.corner.bl { bottom: 8px; left: 8px; border-bottom: 1px solid rgba(0,255,136,0.4); border-left: 1px solid rgba(0,255,136,0.4); }
+.corner.br { bottom: 8px; right: 8px; border-bottom: 1px solid rgba(0,255,136,0.4); border-right: 1px solid rgba(0,255,136,0.4); }
 
-.telem-section { padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.06); }
-.telem-title { font-size: 0.68rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1.5px; color: #475569; margin-bottom: 12px; }
-
-/* Score */
-.score-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.score-team {
-    background: rgba(255,255,255,0.04); border-radius: 10px; padding: 14px;
-    text-align: center; border: 1px solid rgba(255,255,255,0.07);
+/* SIDEBAR */
+.sidebar {
+    width: 280px; flex-shrink: 0; background: #080808;
+    border-left: 1px solid #181818; overflow-y: auto;
+    display: flex; flex-direction: column;
 }
-.score-team.red   { border-color: rgba(239,68,68,0.3); background: rgba(239,68,68,0.06); }
-.score-team.blue  { border-color: rgba(59,130,246,0.3); background: rgba(59,130,246,0.06); }
-.team-label { font-size: 0.7rem; color: #64748b; margin-bottom: 4px; }
-.team-score { font-size: 2.4rem; font-weight: 900; font-family: 'JetBrains Mono', monospace; line-height: 1; }
-.score-team.red  .team-score { color: #ef4444; }
-.score-team.blue .team-score { color: #3b82f6; }
-.score-delta { font-size: 0.7rem; margin-top: 4px; }
-.score-team.red  .score-delta { color: rgba(239,68,68,0.7); }
-.score-team.blue .score-delta { color: rgba(59,130,246,0.7); }
 
-/* Match timer */
-.match-timer {
-    font-family: 'JetBrains Mono', monospace; font-size: 2rem; font-weight: 800;
-    color: #00d4ff; text-align: center; letter-spacing: 2px;
-    text-shadow: 0 0 20px rgba(0,212,255,0.4); margin-bottom: 4px;
+/* PANEL */
+.panel { padding: 12px 14px; border-bottom: 1px solid #161616; }
+.panel-title { font-size: 0.62rem; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; color: #3a3a3a; margin-bottom: 10px; }
+
+/* SCORE */
+.score-row { display: flex; gap: 8px; }
+.score-box { flex: 1; background: #0d0d0d; border-radius: 6px; padding: 10px; text-align: center; border: 1px solid #1a1a1a; }
+.score-box.red { border-color: #3d1515; }
+.score-box.blue { border-color: #0e1a35; }
+.score-label { font-size: 0.62rem; color: #444; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 1px; }
+.score-val { font-size: 2rem; font-weight: 800; font-family: 'JetBrains Mono', monospace; line-height: 1; }
+.score-box.red .score-val { color: #ff4444; }
+.score-box.blue .score-val { color: #4488ff; }
+.score-delta { font-size: 0.62rem; height: 14px; margin-top: 3px; }
+.score-box.red .score-delta { color: rgba(255,68,68,0.6); }
+.score-box.blue .score-delta { color: rgba(68,136,255,0.6); }
+
+/* TIMER */
+.timer-val { font-family: 'JetBrains Mono', monospace; font-size: 2.2rem; font-weight: 800; color: #00ff88; text-align: center; line-height: 1; text-shadow: 0 0 16px rgba(0,255,136,0.3); }
+.timer-phase { font-size: 0.62rem; color: #444; text-align: center; margin-top: 4px; text-transform: uppercase; letter-spacing: 1.5px; }
+
+/* TRACK LIST */
+.track-list { display: flex; flex-direction: column; gap: 4px; max-height: 160px; overflow-y: auto; }
+.track-item {
+    display: flex; align-items: center; gap: 8px; padding: 6px 8px;
+    background: #0d0d0d; border-radius: 4px; border-left: 2px solid;
+    font-family: 'JetBrains Mono', monospace; font-size: 0.66rem;
 }
-.match-phase { font-size: 0.75rem; color: #64748b; text-align: center; text-transform: uppercase; letter-spacing: 1px; }
+.track-id { color: #555; width: 44px; flex-shrink: 0; }
+.track-class { color: #888; flex: 1; }
+.track-conf { margin-left: auto; font-size: 0.63rem; }
+.track-conf.high { color: #00ff88; }
+.track-conf.med  { color: #f59e0b; }
+.track-age { color: #333; font-size: 0.6rem; min-width: 28px; text-align: right; }
 
-/* Detection list */
-.det-list { display: flex; flex-direction: column; gap: 6px; max-height: 180px; overflow-y: auto; }
-.det-item {
-    display: flex; align-items: center; gap: 8px; padding: 7px 10px;
-    background: rgba(255,255,255,0.03); border-radius: 6px;
-    border-left: 3px solid; font-size: 0.78rem; animation: det-appear 0.2s ease;
-}
-@keyframes det-appear { from { opacity: 0; transform: translateX(8px); } to { opacity: 1; transform: none; } }
-.det-id { font-family: 'JetBrains Mono', monospace; font-size: 0.68rem; color: #475569; width: 40px; flex-shrink: 0; }
-.det-conf { font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; margin-left: auto; }
+/* INFERENCE PIPELINE */
+.pipe-stages { display: flex; flex-direction: column; gap: 6px; }
+.pipe-stage { display: flex; align-items: center; gap: 8px; }
+.pipe-name { font-size: 0.7rem; color: #555; width: 90px; flex-shrink: 0; }
+.pipe-bar-bg { flex: 1; height: 4px; background: #161616; border-radius: 2px; overflow: hidden; }
+.pipe-bar-fill { height: 100%; border-radius: 2px; transition: width 0.4s ease; }
+.pipe-ms { font-family: 'JetBrains Mono', monospace; font-size: 0.62rem; color: #555; width: 36px; text-align: right; }
 
-/* Camera feeds (mini) */
-.mini-feeds { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.mini-feed { position: relative; aspect-ratio: 4/3; overflow: hidden; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); }
-.mini-feed canvas { width: 100%; height: 100%; }
-.mini-label { position: absolute; bottom: 4px; left: 6px; font-size: 0.6rem; font-family: 'JetBrains Mono', monospace; color: rgba(0,212,255,0.7); }
+/* CONSENSUS */
+.consensus-list { display: flex; flex-direction: column; gap: 6px; }
+.cons-row { display: flex; align-items: center; gap: 8px; }
+.cons-cam { font-size: 0.65rem; color: #555; width: 48px; font-family: 'JetBrains Mono', monospace; }
+.cons-bar-bg { flex: 1; height: 5px; background: #161616; border-radius: 3px; overflow: hidden; }
+.cons-fill { height: 100%; background: linear-gradient(to right, #00ff88, #00d4ff); border-radius: 3px; transition: width 0.5s ease; }
+.cons-val { font-family: 'JetBrains Mono', monospace; font-size: 0.62rem; color: #555; width: 30px; text-align: right; }
+.cons-status { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
 
-/* Consensus filter */
-.consensus-bar { height: 6px; background: rgba(255,255,255,0.08); border-radius: 3px; overflow: hidden; margin-top: 4px; }
-.consensus-fill { height: 100%; border-radius: 3px; transition: width 0.3s ease; }
-.consensus-row { display: flex; justify-content: space-between; font-size: 0.72rem; margin-bottom: 2px; }
+/* LOG */
+.log-area { font-family: 'JetBrains Mono', monospace; font-size: 0.62rem; display: flex; flex-direction: column-reverse; gap: 1px; max-height: 130px; overflow-y: auto; }
+.log-line { padding: 1px 0; }
+.log-line.ok   { color: #00ff88; }
+.log-line.info { color: #00d4ff; }
+.log-line.warn { color: #f59e0b; }
+.log-line.err  { color: #ef4444; }
+.log-line.dim  { color: #333; }
 
-/* Log */
-.sys-log { font-family: 'JetBrains Mono', monospace; font-size: 0.68rem; color: #475569; max-height: 120px; overflow-y: auto; display: flex; flex-direction: column-reverse; gap: 2px; }
-.sys-log .line { padding: 1px 0; }
-.sys-log .line.ok   { color: #10b981; }
-.sys-log .line.warn { color: #f59e0b; }
-.sys-log .line.err  { color: #ef4444; }
-.sys-log .line.info { color: #00d4ff; }
+/* MINI CAMS */
+.mini-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.mini-cam { position: relative; background: #0a0a0a; border-radius: 4px; overflow: hidden; border: 1px solid #1a1a1a; aspect-ratio: 16/9; }
+.mini-cam canvas { width: 100%; height: 100%; display: block; }
+.mini-label { position: absolute; bottom: 3px; left: 5px; font-family: 'JetBrains Mono', monospace; font-size: 0.58rem; color: rgba(0,255,136,0.6); }
+.mini-cam .mini-rec { position: absolute; top: 3px; right: 5px; width: 5px; height: 5px; border-radius: 50%; background: #ef4444; animation: rec-blink 1.3s step-end infinite; }
 
-/* Controls */
-.controls { padding: 14px; display: flex; flex-direction: column; gap: 8px; }
-.ctrl-btn {
-    width: 100%; padding: 10px; border-radius: 7px; border: none; cursor: pointer;
-    font-family: 'Inter', sans-serif; font-size: 0.82rem; font-weight: 600; transition: all 0.2s;
-}
-.ctrl-cyan { background: rgba(0,212,255,0.15); color: #00d4ff; border: 1px solid rgba(0,212,255,0.3); }
-.ctrl-cyan:hover { background: rgba(0,212,255,0.25); }
-.ctrl-outline { background: rgba(255,255,255,0.04); color: #94a3b8; border: 1px solid rgba(255,255,255,0.1); }
-.ctrl-outline:hover { background: rgba(255,255,255,0.08); }
+/* STACK BADGE */
+.stack-row { display: flex; flex-wrap: wrap; gap: 4px; }
+.stag { font-size: 0.6rem; background: #111; border: 1px solid #222; color: #555; padding: 2px 7px; border-radius: 3px; font-family: 'JetBrains Mono', monospace; }
 
-/* Bottom bar */
-.field-bottom {
-    position: absolute; bottom: 0; left: 0; right: 0; padding: 8px 16px;
-    background: rgba(5,11,24,0.85); border-top: 1px solid rgba(0,212,255,0.1);
-    display: flex; align-items: center; gap: 16px; font-size: 0.72rem; font-family: 'JetBrains Mono', monospace;
-}
-.fb-item { display: flex; align-items: center; gap: 6px; color: #475569; }
-.fb-val { color: #00d4ff; }
-
-/* Tech stack note */
-.stack-note { padding: 12px 16px; background: rgba(0,212,255,0.04); border-top: 1px solid rgba(0,212,255,0.1); }
-.stack-note p { font-size: 0.72rem; color: #64748b; line-height: 1.6; margin-bottom: 6px; }
-.stack-tags { display: flex; flex-wrap: wrap; gap: 5px; }
-.stack-tag { font-size: 0.65rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.08); color: #94a3b8; padding: 2px 8px; border-radius: 4px; font-family: 'JetBrains Mono', monospace; }
-
-a { color: #00d4ff; text-decoration: none; font-size: 0.85rem; }
+/* CONTROLS */
+.ctrl-row { display: flex; gap: 6px; }
+.ctrl-btn { flex: 1; padding: 7px; border-radius: 5px; border: none; cursor: pointer; font-family: 'Inter',sans-serif; font-size: 0.72rem; font-weight: 600; transition: opacity 0.15s; }
+.ctrl-btn.green { background: rgba(0,255,136,0.12); color: #00ff88; border: 1px solid rgba(0,255,136,0.2); }
+.ctrl-btn.green:hover { opacity: 0.8; }
+.ctrl-btn.outline { background: #0d0d0d; color: #444; border: 1px solid #1e1e1e; }
+.ctrl-btn.outline:hover { color: #888; }
     </style>
 </head>
 <body>
 
 <div class="topbar">
-    <h1>🤖 <span>VEX CV Scoring</span> — Real-Time Detection Demo</h1>
+    <div class="topbar-left">
+        <div class="rec-dot"></div>
+        <h1>NVIDIA <span>DeepStream</span> · VEX Robotics Scoring Pipeline</h1>
+    </div>
     <div class="topbar-right">
-        <div class="status-dot"></div>
-        <span class="status-label" id="sys-status">LIVE — 60fps</span>
-        <a href="index.html">← Portfolio</a>
+        <span id="fps-disp">60 FPS</span>
+        <span>·</span>
+        <span id="lat-disp">8.2ms</span>
+        <span>·</span>
+        <span id="gpu-disp">GPU 34%</span>
+        <span>·</span>
+        <a class="back-link" href="index.html">← Portfolio</a>
     </div>
 </div>
 
-<div class="layout">
-    <!-- MAIN FIELD VIEW -->
-    <div class="field-panel">
-        <canvas id="fieldCanvas"></canvas>
-        <div class="scan-overlay"><div class="scan-line"></div></div>
-        <div class="corner-overlay">
-            <div class="corner tl"></div>
-            <div class="corner tr"></div>
-            <div class="corner bl"></div>
-            <div class="corner br"></div>
+<div class="main">
+
+    <!-- CAMERA FEED -->
+    <div class="feed-area">
+        <canvas id="mainCanvas"></canvas>
+        <div class="corner tl"></div>
+        <div class="corner tr"></div>
+        <div class="corner bl"></div>
+        <div class="corner br"></div>
+        <div class="hud-tl">
+            <div>CAM-01 · OVERHEAD · 1920×1080</div>
+            <div id="hud-ts">2026-05-29 · 14:32:01.004</div>
         </div>
-        <div class="cam-label">📷 CAM-1 — Overhead Wide · 1920×1080 · YOLO v8</div>
-        <div class="fps-label" id="fps-label">FPS: —</div>
-        <div class="frame-label" id="frame-label">FRAME: 0</div>
-        <div class="field-bottom">
-            <div class="fb-item">🎯 <span>Detections: </span><span class="fb-val" id="fb-det">0</span></div>
-            <div class="fb-item">✅ <span>Confidence: </span><span class="fb-val" id="fb-conf">—</span></div>
-            <div class="fb-item">🔄 <span>Consensus: </span><span class="fb-val" id="fb-cons">—</span></div>
-            <div class="fb-item">⏱ <span>Latency: </span><span class="fb-val" id="fb-lat">—</span></div>
+        <div class="hud-tr">
+            <div>YOLO v8s · ONNX Runtime</div>
+            <div id="hud-frame">FRAME 000000</div>
+            <div id="hud-det">DETECTIONS: 0</div>
         </div>
+        <div class="hud-bl">
+            <div>© Nathan Janit · VEX CV Scoring System · Rust + Kubernetes</div>
+        </div>
+        <div class="hud-br" id="hud-br">CONF ≥ 0.45</div>
     </div>
 
-    <!-- TELEMETRY SIDEBAR -->
-    <div class="telemetry">
+    <!-- SIDEBAR -->
+    <div class="sidebar">
 
-        <!-- Score -->
-        <div class="telem-section">
-            <div class="telem-title">Score</div>
-            <div class="score-grid">
-                <div class="score-team red">
-                    <div class="team-label">🔴 Red Alliance</div>
-                    <div class="team-score" id="score-red">0</div>
+        <div class="panel">
+            <div class="panel-title">Score</div>
+            <div class="score-row">
+                <div class="score-box red">
+                    <div class="score-label">🔴 Red</div>
+                    <div class="score-val" id="score-red">0</div>
                     <div class="score-delta" id="delta-red"></div>
                 </div>
-                <div class="score-team blue">
-                    <div class="team-label">🔵 Blue Alliance</div>
-                    <div class="team-score" id="score-blue">0</div>
+                <div class="score-box blue">
+                    <div class="score-label">🔵 Blue</div>
+                    <div class="score-val" id="score-blue">0</div>
                     <div class="score-delta" id="delta-blue"></div>
                 </div>
             </div>
         </div>
 
-        <!-- Timer -->
-        <div class="telem-section">
-            <div class="telem-title">Match</div>
-            <div class="match-timer" id="match-timer">2:00</div>
-            <div class="match-phase" id="match-phase">Driver Control</div>
+        <div class="panel">
+            <div class="panel-title">Match Timer</div>
+            <div class="timer-val" id="timer-val">2:00</div>
+            <div class="timer-phase" id="timer-phase">Driver Control</div>
         </div>
 
-        <!-- Detections -->
-        <div class="telem-section">
-            <div class="telem-title">Active Detections</div>
-            <div class="det-list" id="det-list"></div>
+        <div class="panel">
+            <div class="panel-title">Active Tracks</div>
+            <div class="track-list" id="track-list"></div>
         </div>
 
-        <!-- Multi-camera -->
-        <div class="telem-section">
-            <div class="telem-title">Camera Feeds</div>
-            <div class="mini-feeds">
-                <div class="mini-feed"><canvas id="cam2"></canvas><div class="mini-label">CAM-2 · Red Goal</div></div>
-                <div class="mini-feed"><canvas id="cam3"></canvas><div class="mini-label">CAM-3 · Blue Goal</div></div>
-                <div class="mini-feed"><canvas id="cam4"></canvas><div class="mini-label">CAM-4 · Center</div></div>
-                <div class="mini-feed"><canvas id="cam5"></canvas><div class="mini-label">CAM-5 · Elev.</div></div>
+        <div class="panel">
+            <div class="panel-title">Inference Pipeline</div>
+            <div class="pipe-stages" id="pipe-stages">
+                <div class="pipe-stage"><span class="pipe-name">Decode/Pre</span><div class="pipe-bar-bg"><div class="pipe-bar-fill" id="pipe-0" style="width:20%;background:#555;"></div></div><span class="pipe-ms" id="pms-0">1.1ms</span></div>
+                <div class="pipe-stage"><span class="pipe-name">YOLO Infer</span><div class="pipe-bar-bg"><div class="pipe-bar-fill" id="pipe-1" style="width:60%;background:#00d4ff;"></div></div><span class="pipe-ms" id="pms-1">5.2ms</span></div>
+                <div class="pipe-stage"><span class="pipe-name">NMS/Post</span><div class="pipe-bar-bg"><div class="pipe-bar-fill" id="pipe-2" style="width:15%;background:#a855f7;"></div></div><span class="pipe-ms" id="pms-2">0.8ms</span></div>
+                <div class="pipe-stage"><span class="pipe-name">ByteTrack</span><div class="pipe-bar-bg"><div class="pipe-bar-fill" id="pipe-3" style="width:18%;background:#f59e0b;"></div></div><span class="pipe-ms" id="pms-3">0.9ms</span></div>
+                <div class="pipe-stage"><span class="pipe-name">Consensus</span><div class="pipe-bar-bg"><div class="pipe-bar-fill" id="pipe-4" style="width:10%;background:#00ff88;"></div></div><span class="pipe-ms" id="pms-4">0.4ms</span></div>
             </div>
         </div>
 
-        <!-- Consensus filter -->
-        <div class="telem-section">
-            <div class="telem-title">Probabilistic Consensus Filter</div>
-            <div id="consensus-display"></div>
-        </div>
-
-        <!-- Controls -->
-        <div class="controls">
-            <button class="ctrl-btn ctrl-cyan" id="btn-pause" onclick="togglePause()">⏸ Pause Simulation</button>
-            <button class="ctrl-btn ctrl-outline" onclick="resetMatch()">↩ Reset Match</button>
-        </div>
-
-        <!-- System log -->
-        <div class="telem-section">
-            <div class="telem-title">System Log</div>
-            <div class="sys-log" id="sys-log"></div>
-        </div>
-
-        <!-- Stack note -->
-        <div class="stack-note">
-            <p><strong style="color:#e2e8f0;">Real System:</strong> Rust (Axum) backend processes NVIDIA DeepStream video, runs ONNX object detection, and applies a probabilistic consensus filter across camera feeds. WASM frontend displays real-time results.</p>
-            <div class="stack-tags">
-                <span class="stack-tag">Rust</span>
-                <span class="stack-tag">Kubernetes</span>
-                <span class="stack-tag">DeepStream</span>
-                <span class="stack-tag">ONNX Runtime</span>
-                <span class="stack-tag">OpenCV</span>
-                <span class="stack-tag">WebAssembly</span>
-                <span class="stack-tag">Axum/Tokio</span>
-                <span class="stack-tag">Docker</span>
+        <div class="panel">
+            <div class="panel-title">Multi-Camera Consensus</div>
+            <div class="consensus-list" id="cons-list">
+                <div class="cons-row"><span class="cons-cam">CAM-01</span><div class="cons-bar-bg"><div class="cons-fill" id="cons-0" style="width:95%"></div></div><span class="cons-val" id="consv-0">95%</span><div class="cons-status" style="background:#00ff88"></div></div>
+                <div class="cons-row"><span class="cons-cam">CAM-02</span><div class="cons-bar-bg"><div class="cons-fill" id="cons-1" style="width:88%"></div></div><span class="cons-val" id="consv-1">88%</span><div class="cons-status" style="background:#00ff88"></div></div>
+                <div class="cons-row"><span class="cons-cam">CAM-03</span><div class="cons-bar-bg"><div class="cons-fill" id="cons-2" style="width:91%"></div></div><span class="cons-val" id="consv-2">91%</span><div class="cons-status" style="background:#00ff88"></div></div>
+                <div class="cons-row"><span class="cons-cam">CAM-04</span><div class="cons-bar-bg"><div class="cons-fill" id="cons-3" style="width:79%"></div></div><span class="cons-val" id="consv-3">79%</span><div class="cons-status" style="background:#f59e0b"></div></div>
             </div>
         </div>
+
+        <div class="panel">
+            <div class="panel-title">Other Cameras</div>
+            <div class="mini-grid">
+                <div class="mini-cam"><canvas id="cam2"></canvas><div class="mini-label">CAM-02 RED</div><div class="mini-rec"></div></div>
+                <div class="mini-cam"><canvas id="cam3"></canvas><div class="mini-label">CAM-03 BLUE</div><div class="mini-rec"></div></div>
+                <div class="mini-cam"><canvas id="cam4"></canvas><div class="mini-label">CAM-04 MID</div><div class="mini-rec"></div></div>
+                <div class="mini-cam"><canvas id="cam5"></canvas><div class="mini-label">CAM-05 ELEV</div><div class="mini-rec"></div></div>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-title">Controls</div>
+            <div class="ctrl-row" style="margin-bottom:6px;">
+                <button class="ctrl-btn green" id="btn-pause" onclick="togglePause()">⏸ Pause</button>
+                <button class="ctrl-btn outline" onclick="resetMatch()">↩ Reset</button>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-title">System Log</div>
+            <div class="log-area" id="log-area"></div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-title">Stack</div>
+            <div class="stack-row">
+                <span class="stag">Rust</span><span class="stag">Kubernetes</span><span class="stag">DeepStream</span>
+                <span class="stag">ONNX</span><span class="stag">ByteTrack</span><span class="stag">OpenCV</span>
+                <span class="stag">WASM</span><span class="stag">Axum</span><span class="stag">Docker</span>
+            </div>
+        </div>
+
     </div>
 </div>
 
 <script>
 /* ============================================================
-   VEX CV SCORING SYSTEM — Demo Simulation
+   VEX CV SCORING — Realistic DeepStream Simulation
    ============================================================ */
 
 // ── FIELD CONSTANTS ────────────────────────────────────────
-const FIELD_W = 3658; // mm — 12ft VEX field
-const FIELD_H = 3658;
-const TILE = FIELD_W / 6; // 6x6 tiles
+const FIELD_SIZE = 3658; // mm, 12ft VEX field
+const RED_ZONE_W = FIELD_SIZE / 6;
+const BLUE_ZONE_W = FIELD_SIZE / 6;
+const TRIBALL_R = 100;
+const ROBOT_W = 350, ROBOT_H = 350;
 
-// Game objects for VEX "Over Under" season
-const TRIBALLS = [];
-const ROBOTS = [];
-let frame = 0;
-let paused = false;
-let matchTime = 120;
-let lastTime = 0;
-let scoreRed = 0, scoreBlue = 0;
-let frameCount = 0, fpsTime = 0, fps = 60;
-let sysLogLines = [];
-
-// Canvas setup
-const canvas = document.getElementById('fieldCanvas');
+// Canvas
+const canvas = document.getElementById('mainCanvas');
 const ctx = canvas.getContext('2d');
-let cw, ch, scaleX, scaleY;
+let cw, ch, paused = false, frame = 0, matchTime = 120;
+let scoreRed = 0, scoreBlue = 0;
+let lastT = 0, fpsSamples = [], fpsDisplay = 60;
 
+// ── FIELD-TO-SCREEN MAPPING ────────────────────────────────
+let fieldOffX, fieldOffY, fieldPx;
 function resize() {
-    const panel = canvas.parentElement;
-    canvas.width = cw = panel.clientWidth;
-    canvas.height = ch = panel.clientHeight - 36;
-    const fieldAspect = 1;
-    const s = Math.min(cw, ch) * 0.92;
-    scaleX = s / FIELD_W;
-    scaleY = s / FIELD_H;
+    const area = canvas.parentElement;
+    canvas.width  = cw = area.clientWidth;
+    canvas.height = ch = area.clientHeight;
+    fieldPx = Math.min(cw, ch) * 0.88;
+    fieldOffX = (cw - fieldPx) / 2;
+    fieldOffY = (ch - fieldPx) / 2;
 }
-window.addEventListener('resize', resize);
+function fx(x) { return fieldOffX + (x / FIELD_SIZE) * fieldPx; }
+function fy(y) { return fieldOffY + (y / FIELD_SIZE) * fieldPx; }
+function fs(s) { return (s / FIELD_SIZE) * fieldPx; }
+window.addEventListener('resize', () => { resize(); });
 resize();
 
-function fx(x) { return (cw - FIELD_W * scaleX) / 2 + x * scaleX; }
-function fy(y) { return (ch - FIELD_H * scaleY) / 2 + y * scaleY; }
-function fs(s) { return s * scaleX; }
+// ── NOISE GENERATION (for camera feed look) ────────────────
+const noiseBuf = new Uint8ClampedArray(320 * 240 * 4);
+function generateNoise() {
+    for (let i = 0; i < noiseBuf.length; i += 4) {
+        const v = Math.random() * 18 | 0;
+        noiseBuf[i] = noiseBuf[i+1] = noiseBuf[i+2] = v;
+        noiseBuf[i+3] = 255;
+    }
+}
+const noiseCanvas = document.createElement('canvas');
+noiseCanvas.width = 320; noiseCanvas.height = 240;
+const noiseCtx = noiseCanvas.getContext('2d');
 
-// ── GAME OBJECTS ────────────────────────────────────────────
-class Robot {
-    constructor(team, startX, startY) {
-        this.team = team;
-        this.x = startX; this.y = startY;
-        this.w = 380; this.h = 380;
-        this.vx = (Math.random()-0.5)*400;
-        this.vy = (Math.random()-0.5)*400;
+// ── GAME OBJECTS ───────────────────────────────────────────
+class TrackedObject {
+    constructor(id, cls, team, x, y) {
+        this.id = id;
+        this.cls = cls;      // 'robot' | 'triball'
+        this.team = team;    // 'red' | 'blue' | 'neutral'
+        this.x = x; this.y = y;
+        this.vx = (Math.random()-0.5)*300;
+        this.vy = (Math.random()-0.5)*300;
         this.angle = Math.random() * Math.PI * 2;
-        this.vAngle = (Math.random()-0.5) * 1.5;
-        this.id = `BOT-${team.toUpperCase()}-${Math.floor(Math.random()*9)+1}`;
-        this.detConf = 0.85 + Math.random() * 0.12;
-        this.detColor = team === 'red' ? '#ef4444' : '#3b82f6';
-        this.hasTriball = false;
-        this.nextAction = 0;
+        this.vAngle = (Math.random()-0.5) * 2;
+        this.conf = 0.82 + Math.random() * 0.16;
+        this.age = 0;
+        this.trail = [];      // array of {x,y}
         this.target = null;
-        this.mode = 'wander'; // 'wander' | 'collect' | 'score'
+        this.nextDecision = 0;
+        this.hasTriball = false;
+        this._carrying = null;
+        this.scored = false;
+        this.color = team === 'red' ? '#ff4444' : team === 'blue' ? '#4488ff' : '#f59e0b';
+        this.mode = 'wander';
+        this.detJitter = 0;
+    }
+
+    get bbox() {
+        const hw = cls_size(this.cls) / 2;
+        return { x: fx(this.x) - hw, y: fy(this.y) - hw, w: hw*2, h: hw*2 };
     }
 
     update(dt) {
-        // Simple steering behavior
-        this.nextAction -= dt;
-        if (this.nextAction <= 0) {
-            this.nextAction = 1.5 + Math.random() * 2;
-            if (!this.hasTriball) {
-                // Find nearest triball
-                let closest = null, closestD = Infinity;
-                TRIBALLS.forEach(t => {
-                    if (!t.held) {
-                        const d = Math.hypot(t.x - this.x, t.y - this.y);
-                        if (d < closestD) { closestD = d; closest = t; }
+        this.age++;
+        this.conf = Math.max(0.45, Math.min(0.99, this.conf + (Math.random()-0.5)*0.02));
+        this.detJitter = (Math.random()-0.5)*4;
+
+        if (this.cls === 'robot') {
+            this.nextDecision -= dt;
+            if (this.nextDecision <= 0) {
+                this.nextDecision = 1 + Math.random() * 2.5;
+                if (!this.hasTriball) {
+                    // find closest unclaimed triball
+                    let best = null, bestD = Infinity;
+                    objects.forEach(o => {
+                        if (o.cls === 'triball' && !o._carrier) {
+                            const d = Math.hypot(o.x - this.x, o.y - this.y);
+                            if (d < bestD) { bestD = d; best = o; }
+                        }
+                    });
+                    if (best && bestD < 900) {
+                        this.target = { x: best.x, y: best.y, obj: best };
+                        this.mode = 'collect';
+                    } else {
+                        this.target = { x: Math.random()*FIELD_SIZE, y: Math.random()*FIELD_SIZE };
+                        this.mode = 'wander';
                     }
-                });
-                if (closest && closestD < 900) {
-                    this.target = { x: closest.x, y: closest.y };
-                    this.mode = 'collect';
-                    this._targetBall = closest;
                 } else {
-                    this.target = { x: Math.random() * FIELD_W, y: Math.random() * FIELD_H };
-                    this.mode = 'wander';
+                    const goalX = this.team === 'red' ? RED_ZONE_W * 0.5 : FIELD_SIZE - BLUE_ZONE_W*0.5;
+                    this.target = { x: goalX, y: FIELD_SIZE/2 + (Math.random()-0.5)*800 };
+                    this.mode = 'score';
                 }
-            } else {
-                // Go score
-                const goalX = this.team === 'red' ? TILE * 0.6 : FIELD_W - TILE * 0.6;
-                const goalY = FIELD_H / 2;
-                this.target = { x: goalX, y: goalY };
-                this.mode = 'score';
             }
-        }
 
-        if (this.target) {
-            const dx = this.target.x - this.x, dy = this.target.y - this.y;
-            const d = Math.hypot(dx, dy);
-            const speed = 500;
-            if (d > 50) {
-                this.vx = (dx / d) * speed;
-                this.vy = (dy / d) * speed;
-                this.angle = Math.atan2(dy, dx);
-            } else {
-                if (this.mode === 'collect' && this._targetBall && !this._targetBall.held) {
-                    this._targetBall.held = true;
-                    this._targetBall.holder = this;
-                    this.hasTriball = true;
-                } else if (this.mode === 'score' && this.hasTriball) {
-                    // Score!
-                    if (this.team === 'red') scoreRed += 2;
-                    else scoreBlue += 2;
-                    if (this._targetBall) {
-                        this._targetBall.held = false;
-                        this._targetBall.holder = null;
-                        this._targetBall.x = FIELD_W/2 + (Math.random()-0.5)*TILE;
-                        this._targetBall.y = FIELD_H/2 + (Math.random()-0.5)*TILE;
+            if (this.target) {
+                const dx = this.target.x - this.x, dy = this.target.y - this.y;
+                const d = Math.hypot(dx, dy);
+                if (d > 60) {
+                    const spd = 480;
+                    this.vx = (dx/d)*spd; this.vy = (dy/d)*spd;
+                    this.angle = Math.atan2(dy, dx);
+                } else {
+                    if (this.mode === 'collect' && this.target.obj && !this.target.obj._carrier) {
+                        this.target.obj._carrier = this;
+                        this.hasTriball = true;
+                        this._carrying = this.target.obj;
+                    } else if (this.mode === 'score' && this.hasTriball && this._carrying) {
+                        const inGoal = this.team === 'red' ? this.x < RED_ZONE_W : this.x > FIELD_SIZE - BLUE_ZONE_W;
+                        if (inGoal) {
+                            if (this.team === 'red') scoreRed += 2;
+                            else scoreBlue += 2;
+                            this._carrying._carrier = null;
+                            this._carrying.x = FIELD_SIZE/2 + (Math.random()-0.5)*600;
+                            this._carrying.y = FIELD_SIZE/2 + (Math.random()-0.5)*600;
+                            this._carrying.vx = (Math.random()-0.5)*200;
+                            this._carrying.vy = (Math.random()-0.5)*200;
+                            this._carrying = null;
+                            this.hasTriball = false;
+                            updateScoreDelta(this.team);
+                            log(`[SCORE] ${this.id} scored. ${this.team.toUpperCase()} +2`, 'ok');
+                        }
                     }
-                    this.hasTriball = false;
-                    updateScoreDisplay();
-                    sysLog(`${this.id} scored! (${this.team} +2)`, 'ok');
+                    this.target = null;
                 }
-                this.target = null;
             }
         }
 
-        this.x = Math.max(this.w/2, Math.min(FIELD_W - this.w/2, this.x + this.vx * dt));
-        this.y = Math.max(this.h/2, Math.min(FIELD_H - this.h/2, this.y + this.vy * dt));
+        this.x = clamp(this.x + this.vx * dt, ROBOT_W/2, FIELD_SIZE - ROBOT_W/2);
+        this.y = clamp(this.y + this.vy * dt, ROBOT_H/2, FIELD_SIZE - ROBOT_H/2);
+        this.vx *= 0.88; this.vy *= 0.88;
+        this.vAngle *= 0.95;
+        this.angle += this.vAngle * dt;
 
-        if (this._targetBall && this._targetBall.held && this._targetBall.holder === this) {
-            this._targetBall.x = this.x;
-            this._targetBall.y = this.y;
+        if (this._carrying) {
+            this._carrying.x = this.x; this._carrying.y = this.y;
         }
 
-        // Friction
-        this.vx *= 0.92;
-        this.vy *= 0.92;
+        // Trail
+        if (frame % 3 === 0) {
+            this.trail.push({ x: this.x, y: this.y });
+            if (this.trail.length > 18) this.trail.shift();
+        }
     }
 }
 
-class Triball {
-    constructor(x, y) {
-        this.x = x; this.y = y;
-        this.r = 120;
-        this.held = false;
-        this.holder = null;
-        this.id = `TB-${String(TRIBALLS.length+1).padStart(3,'0')}`;
-        this.color = `hsl(${40 + Math.random()*40}, 80%, 60%)`;
-        this.detConf = 0.78 + Math.random() * 0.18;
-    }
-}
+function cls_size(cls) { return cls === 'robot' ? fs(ROBOT_W)*1.3 : fs(TRIBALL_R)*2.2; }
+function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
 
-// Initialize
+let objects = [];
+let idCounter = 1;
+
 function initObjects() {
-    TRIBALLS.length = 0;
-    ROBOTS.length = 0;
-    scoreRed = 0; scoreBlue = 0;
-    matchTime = 120;
+    objects = [];
+    idCounter = 1;
+    scoreRed = 0; scoreBlue = 0; matchTime = 120;
 
-    // 4 robots (2 per team)
-    ROBOTS.push(new Robot('red',  TILE*0.8, FIELD_H/2 - TILE));
-    ROBOTS.push(new Robot('red',  TILE*0.8, FIELD_H/2 + TILE));
-    ROBOTS.push(new Robot('blue', FIELD_W - TILE*0.8, FIELD_H/2 - TILE));
-    ROBOTS.push(new Robot('blue', FIELD_W - TILE*0.8, FIELD_H/2 + TILE));
+    // 4 robots
+    const robots = [
+        ['red',  FIELD_SIZE*0.1, FIELD_SIZE*0.35],
+        ['red',  FIELD_SIZE*0.1, FIELD_SIZE*0.65],
+        ['blue', FIELD_SIZE*0.9, FIELD_SIZE*0.35],
+        ['blue', FIELD_SIZE*0.9, FIELD_SIZE*0.65],
+    ];
+    robots.forEach(([team, x, y]) => {
+        const r = new TrackedObject(`BOT-${idCounter++}`, 'robot', team, x, y);
+        objects.push(r);
+    });
 
-    // Triballs scattered around center
-    for (let i = 0; i < 24; i++) {
-        const angle = (i / 24) * Math.PI * 2;
-        const r = TILE * (0.6 + Math.random() * 1.2);
-        TRIBALLS.push(new Triball(
-            FIELD_W/2 + Math.cos(angle) * r,
-            FIELD_H/2 + Math.sin(angle) * r
-        ));
+    // 20 triballs scattered around center
+    for (let i = 0; i < 20; i++) {
+        const ang = (i / 20) * Math.PI * 2;
+        const r = FIELD_SIZE * (0.12 + Math.random() * 0.22);
+        const tb = new TrackedObject(`TB-${String(idCounter++).padStart(3,'0')}`, 'triball', 'neutral',
+            FIELD_SIZE/2 + Math.cos(ang)*r,
+            FIELD_SIZE/2 + Math.sin(ang)*r);
+        objects.push(tb);
     }
 }
 initObjects();
 
-// ── DRAW FIELD ────────────────────────────────────────────
+// ── DRAW FIELD ─────────────────────────────────────────────
 function drawField() {
+    // Clear
     ctx.clearRect(0, 0, cw, ch);
 
-    // Background
-    const ox = fx(0), oy = fy(0), fw = fs(FIELD_W), fh = fs(FIELD_H);
+    // Draw camera-feed noise background
+    if (frame % 2 === 0) generateNoise();
+    const imgData = new ImageData(noiseBuf, 320, 240);
+    noiseCtx.putImageData(imgData, 0, 0);
+    ctx.save();
+    ctx.globalAlpha = 0.06;
+    ctx.drawImage(noiseCanvas, 0, 0, cw, ch);
+    ctx.restore();
 
-    // Field background
+    // Vignette
+    const vig = ctx.createRadialGradient(cw/2, ch/2, ch*0.25, cw/2, ch/2, ch*0.8);
+    vig.addColorStop(0, 'rgba(0,0,0,0)');
+    vig.addColorStop(1, 'rgba(0,0,0,0.55)');
+    ctx.fillStyle = vig;
+    ctx.fillRect(0, 0, cw, ch);
+
+    // Field surface
     ctx.fillStyle = '#1a2535';
-    ctx.fillRect(ox, oy, fw, fh);
+    ctx.fillRect(fieldOffX, fieldOffY, fieldPx, fieldPx);
 
-    // Tiles
-    for (let r = 0; r < 6; r++) {
-        for (let c = 0; c < 6; c++) {
-            const tx = ox + c * fw/6, ty = oy + r * fh/6;
-            ctx.strokeStyle = 'rgba(255,255,255,0.06)';
-            ctx.lineWidth = 1;
-            ctx.strokeRect(tx, ty, fw/6, fh/6);
-        }
+    // Tile grid (subtle)
+    ctx.strokeStyle = 'rgba(255,255,255,0.04)';
+    ctx.lineWidth = 1;
+    for (let i = 0; i <= 6; i++) {
+        const x = fieldOffX + (i/6)*fieldPx, y = fieldOffY + (i/6)*fieldPx;
+        ctx.beginPath(); ctx.moveTo(x, fieldOffY); ctx.lineTo(x, fieldOffY+fieldPx); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(fieldOffX, y); ctx.lineTo(fieldOffX+fieldPx, y); ctx.stroke();
     }
 
-    // Alliance goals (colored zones)
-    ctx.fillStyle = 'rgba(239,68,68,0.12)';
-    ctx.fillRect(ox, oy, fw/6, fh);
-    ctx.fillStyle = 'rgba(59,130,246,0.12)';
-    ctx.fillRect(ox + fw*5/6, oy, fw/6, fh);
+    // Alliance zones
+    ctx.fillStyle = 'rgba(255,68,68,0.08)';
+    ctx.fillRect(fieldOffX, fieldOffY, fieldPx/6, fieldPx);
+    ctx.fillStyle = 'rgba(68,136,255,0.08)';
+    ctx.fillRect(fieldOffX+fieldPx*5/6, fieldOffY, fieldPx/6, fieldPx);
 
-    // Goal lines
-    ctx.strokeStyle = 'rgba(239,68,68,0.5)';
-    ctx.lineWidth = 2;
-    ctx.beginPath(); ctx.moveTo(ox + fw/6, oy); ctx.lineTo(ox + fw/6, oy + fh); ctx.stroke();
-    ctx.strokeStyle = 'rgba(59,130,246,0.5)';
-    ctx.beginPath(); ctx.moveTo(ox + fw*5/6, oy); ctx.lineTo(ox + fw*5/6, oy + fh); ctx.stroke();
+    // Zone lines
+    ctx.strokeStyle = 'rgba(255,68,68,0.35)'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(fieldOffX+fieldPx/6, fieldOffY); ctx.lineTo(fieldOffX+fieldPx/6, fieldOffY+fieldPx); ctx.stroke();
+    ctx.strokeStyle = 'rgba(68,136,255,0.35)';
+    ctx.beginPath(); ctx.moveTo(fieldOffX+fieldPx*5/6, fieldOffY); ctx.lineTo(fieldOffX+fieldPx*5/6, fieldOffY+fieldPx); ctx.stroke();
 
-    // Center line
-    ctx.strokeStyle = 'rgba(255,255,255,0.2)';
-    ctx.lineWidth = 1.5;
-    ctx.setLineDash([8, 6]);
-    ctx.beginPath(); ctx.moveTo(ox + fw/2, oy); ctx.lineTo(ox + fw/2, oy + fh); ctx.stroke();
+    // Center dashed line
+    ctx.strokeStyle = 'rgba(255,255,255,0.12)'; ctx.lineWidth = 1;
+    ctx.setLineDash([6,5]);
+    ctx.beginPath(); ctx.moveTo(fieldOffX+fieldPx/2, fieldOffY); ctx.lineTo(fieldOffX+fieldPx/2, fieldOffY+fieldPx); ctx.stroke();
     ctx.setLineDash([]);
 
-    // Goal labels
-    ctx.fillStyle = 'rgba(239,68,68,0.7)';
-    ctx.font = `bold ${fs(100)}px Inter`;
-    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.fillText('RED', ox + fw*0.083, oy + fh*0.5);
-    ctx.fillStyle = 'rgba(59,130,246,0.7)';
-    ctx.fillText('BLUE', ox + fw*0.917, oy + fh*0.5);
+    // Zone labels (faint)
+    ctx.font = `bold ${fs(160)}px Inter`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillStyle = 'rgba(255,68,68,0.15)';
+    ctx.fillText('RED', fieldOffX+fieldPx*0.083, fieldOffY+fieldPx*0.5);
+    ctx.fillStyle = 'rgba(68,136,255,0.15)';
+    ctx.fillText('BLUE', fieldOffX+fieldPx*0.917, fieldOffY+fieldPx*0.5);
 
-    // Triballs
-    TRIBALLS.forEach(t => {
-        if (t.held) return;
-        const tx = fx(t.x), ty = fy(t.y), tr = fs(t.r);
+    // ── TRAJECTORY TRAILS ─────────────────────────────────
+    objects.forEach(obj => {
+        if (obj.trail.length < 2) return;
+        ctx.save();
+        for (let i = 1; i < obj.trail.length; i++) {
+            const a = (i / obj.trail.length) * 0.5;
+            ctx.strokeStyle = obj.color;
+            ctx.globalAlpha = a * (obj.cls === 'robot' ? 0.7 : 0.3);
+            ctx.lineWidth = obj.cls === 'robot' ? 2 : 1;
+            ctx.beginPath();
+            ctx.moveTo(fx(obj.trail[i-1].x), fy(obj.trail[i-1].y));
+            ctx.lineTo(fx(obj.trail[i].x),   fy(obj.trail[i].y));
+            ctx.stroke();
+        }
+        ctx.restore();
+    });
+
+    // ── DRAW TRIBALLS ──────────────────────────────────────
+    objects.filter(o => o.cls === 'triball' && !o._carrier).forEach(tb => {
+        const tx = fx(tb.x) + tb.detJitter*0.4;
+        const ty = fy(tb.y) + tb.detJitter*0.4;
+        const tr = fs(TRIBALL_R);
         ctx.beginPath();
-        ctx.arc(tx, ty, tr, 0, Math.PI * 2);
-        ctx.fillStyle = t.color;
-        ctx.shadowColor = t.color;
-        ctx.shadowBlur = 4;
-        ctx.fill();
-        ctx.shadowBlur = 0;
-        ctx.strokeStyle = 'rgba(255,255,255,0.5)';
-        ctx.lineWidth = 1;
+        ctx.arc(tx, ty, tr, 0, Math.PI*2);
+        ctx.fillStyle = '#c4a63a';
+        ctx.shadowColor = '#f59e0b'; ctx.shadowBlur = 6;
+        ctx.fill(); ctx.shadowBlur = 0;
+        ctx.strokeStyle = 'rgba(255,255,255,0.3)'; ctx.lineWidth = 1;
         ctx.stroke();
     });
 
-    // Robots
-    ROBOTS.forEach(bot => {
+    // ── DRAW ROBOTS ────────────────────────────────────────
+    objects.filter(o => o.cls === 'robot').forEach(bot => {
         const rx = fx(bot.x), ry = fy(bot.y);
-        const rw = fs(bot.w), rh = fs(bot.h);
+        const rw = fs(ROBOT_W), rh = fs(ROBOT_H);
+        ctx.save();
+        ctx.translate(rx, ry); ctx.rotate(bot.angle);
+        ctx.fillStyle = bot.team === 'red' ? '#5a1a1a' : '#0e1a3a';
+        ctx.shadowColor = bot.color; ctx.shadowBlur = 12;
+        ctx.fillRect(-rw/2, -rh/2, rw, rh);
+        ctx.shadowBlur = 0;
+        ctx.strokeStyle = bot.color; ctx.lineWidth = 2;
+        ctx.strokeRect(-rw/2, -rh/2, rw, rh);
+        // direction arrow
+        ctx.fillStyle = bot.color; ctx.beginPath();
+        ctx.moveTo(rw/2, 0); ctx.lineTo(rw/4, -rh/5); ctx.lineTo(rw/4, rh/5); ctx.closePath(); ctx.fill();
+        // carrying indicator
+        if (bot.hasTriball) {
+            ctx.beginPath(); ctx.arc(0, 0, rw*0.3, 0, Math.PI*2);
+            ctx.fillStyle = 'rgba(245,158,11,0.7)'; ctx.fill();
+        }
+        ctx.restore();
+    });
+
+    // ── BOUNDING BOXES (YOLO-style) ────────────────────────
+    objects.forEach(obj => {
+        if (obj.cls === 'triball' && obj._carrier) return;
+        const size = cls_size(obj.cls);
+        const bx = fx(obj.x) - size/2 + obj.detJitter;
+        const by = fy(obj.y) - size/2 + obj.detJitter * 0.7;
+        const bw = size, bh = size;
+        const col = obj.cls === 'robot' ? obj.color : '#f59e0b';
+        const cLen = Math.min(bw, bh) * 0.22;
 
         ctx.save();
-        ctx.translate(rx, ry);
-        ctx.rotate(bot.angle);
+        ctx.strokeStyle = col;
+        ctx.lineWidth = obj.cls === 'robot' ? 1.5 : 1;
+        ctx.globalAlpha = 0.88;
 
-        // Body
-        ctx.fillStyle = bot.team === 'red' ? '#7f1d1d' : '#1e3a5f';
-        ctx.strokeStyle = bot.team === 'red' ? '#ef4444' : '#3b82f6';
-        ctx.lineWidth = 2;
-        ctx.shadowColor = bot.team === 'red' ? '#ef4444' : '#3b82f6';
-        ctx.shadowBlur = 8;
-        ctx.fillRect(-rw/2, -rh/2, rw, rh);
-        ctx.strokeRect(-rw/2, -rh/2, rw, rh);
-        ctx.shadowBlur = 0;
+        // Corner-bracket style (YOLO/OpenCV look)
+        ctx.beginPath();
+        ctx.moveTo(bx, by + cLen);        ctx.lineTo(bx, by);         ctx.lineTo(bx + cLen, by);
+        ctx.moveTo(bx+bw-cLen, by);       ctx.lineTo(bx+bw, by);      ctx.lineTo(bx+bw, by+cLen);
+        ctx.moveTo(bx+bw, by+bh-cLen);    ctx.lineTo(bx+bw, by+bh);   ctx.lineTo(bx+bw-cLen, by+bh);
+        ctx.moveTo(bx+cLen, by+bh);       ctx.lineTo(bx, by+bh);      ctx.lineTo(bx, by+bh-cLen);
+        ctx.stroke();
 
-        // Direction indicator
-        ctx.fillStyle = bot.team === 'red' ? '#ef4444' : '#3b82f6';
-        ctx.fillRect(rw/4, -rh*0.15, rw/4, rh*0.3);
+        // Center crosshair dot
+        ctx.beginPath(); ctx.arc(fx(obj.x)+obj.detJitter*0.5, fy(obj.y)+obj.detJitter*0.3, 2, 0, Math.PI*2);
+        ctx.fillStyle = col; ctx.fill();
 
-        // Held triball
-        if (bot.hasTriball) {
-            ctx.beginPath();
-            ctx.arc(0, 0, fs(90), 0, Math.PI*2);
-            ctx.fillStyle = 'rgba(245,158,11,0.8)';
-            ctx.fill();
-        }
+        // Label — YOLO format: "class [id] conf%"
+        const label = obj.cls === 'robot'
+            ? `${obj.cls} [${obj.id}] ${(obj.conf*100).toFixed(0)}%`
+            : `triball [${obj.id}] ${(obj.conf*100).toFixed(0)}%`;
+        ctx.font = `600 ${Math.max(9, fs(42))}px JetBrains Mono, monospace`;
+        const tw = ctx.measureText(label).width + 6;
+        const lh = Math.max(12, fs(55));
+
+        ctx.globalAlpha = 0.92;
+        ctx.fillStyle = col;
+        ctx.fillRect(bx, by - lh, tw, lh);
+        ctx.globalAlpha = 1;
+        ctx.fillStyle = '#000';
+        ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+        ctx.fillText(label, bx + 3, by - lh/2);
 
         ctx.restore();
-
-        // Detection bounding box
-        drawBBox(rx, ry, rw * 1.2, rh * 1.2, bot.team === 'red' ? '#ef4444' : '#3b82f6', bot.id, bot.detConf);
     });
 
-    // Triball detection boxes
-    TRIBALLS.forEach((t, i) => {
-        if (t.held) return;
-        if (i % 3 === frame % 3) { // stagger detection updates
-            const tx = fx(t.x), ty = fy(t.y), tr = fs(t.r * 1.6);
-            drawBBox(tx, ty, tr*2, tr*2, '#f59e0b', t.id, t.detConf);
-        }
-    });
-}
-
-function drawBBox(cx, cy, w, h, color, label, conf) {
-    const x = cx - w/2, y = cy - h/2;
-    const cornerLen = Math.min(w, h) * 0.2;
-
-    ctx.strokeStyle = color;
-    ctx.lineWidth = 1.5;
-    ctx.globalAlpha = 0.85;
-
-    // Corners only (more professional look)
-    ctx.beginPath();
-    ctx.moveTo(x, y + cornerLen); ctx.lineTo(x, y); ctx.lineTo(x + cornerLen, y);
-    ctx.moveTo(x + w - cornerLen, y); ctx.lineTo(x + w, y); ctx.lineTo(x + w, y + cornerLen);
-    ctx.moveTo(x + w, y + h - cornerLen); ctx.lineTo(x + w, y + h); ctx.lineTo(x + w - cornerLen, y + h);
-    ctx.moveTo(x + cornerLen, y + h); ctx.lineTo(x, y + h); ctx.lineTo(x, y + h - cornerLen);
-    ctx.stroke();
-
-    // Label background
-    const labelText = `${label} ${(conf*100).toFixed(0)}%`;
-    ctx.font = `600 ${Math.max(9, fs(55))}px JetBrains Mono, monospace`;
-    const tw = ctx.measureText(labelText).width;
-    ctx.fillStyle = color;
-    ctx.globalAlpha = 0.85;
-    ctx.fillRect(x, y - Math.max(14, fs(65)), tw + 8, Math.max(14, fs(65)));
-    ctx.globalAlpha = 1;
-    ctx.fillStyle = '#000';
-    ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
-    ctx.fillText(labelText, x + 4, y - Math.max(7, fs(32)));
-    ctx.globalAlpha = 1;
+    // Field border
+    ctx.strokeStyle = 'rgba(255,255,255,0.08)'; ctx.lineWidth = 2;
+    ctx.strokeRect(fieldOffX, fieldOffY, fieldPx, fieldPx);
 }
 
 // ── MINI CAMERAS ──────────────────────────────────────────
-function drawMiniCam(canvasId, viewX, viewY, viewW, viewH, colorTint) {
-    const mc = document.getElementById(canvasId);
-    mc.width = mc.offsetWidth;
-    mc.height = mc.offsetHeight;
+function drawMiniCam(id, viewFrac, tintR, tintG, tintB) {
+    const mc = document.getElementById(id);
+    if (!mc) return;
+    mc.width = mc.offsetWidth; mc.height = mc.offsetHeight;
     const mctx = mc.getContext('2d');
     mctx.clearRect(0, 0, mc.width, mc.height);
 
-    // Draw a zoomed view of a portion of the main field
+    // Draw dark background
+    mctx.fillStyle = '#111'; mctx.fillRect(0, 0, mc.width, mc.height);
+
+    // Noise
     mctx.save();
-    mctx.scale(mc.width / viewW, mc.height / viewH);
-    mctx.translate(-viewX, -viewY);
+    mctx.globalAlpha = 0.08;
+    mctx.drawImage(noiseCanvas, 0, 0, mc.width, mc.height);
+    mctx.restore();
 
-    // Background
+    // Scale to show a zoomed portion of the field
+    const scl = mc.width / (fieldPx * viewFrac);
+    mctx.save();
+    mctx.scale(scl, scl);
+    mctx.translate(-fieldOffX * 0.5, -fieldOffY * 0.5);
+
+    // Field surface
     mctx.fillStyle = '#1a2535';
-    mctx.fillRect(0, 0, FIELD_W * scaleX + fx(0) * 2, FIELD_H * scaleY + fy(0) * 2);
+    mctx.fillRect(fieldOffX, fieldOffY, fieldPx, fieldPx);
 
-    // Tile grid
-    const ox = fx(0), oy = fy(0), fw = fs(FIELD_W), fh = fs(FIELD_H);
-    for (let r = 0; r < 6; r++) {
-        for (let c = 0; c < 6; c++) {
-            mctx.strokeStyle = 'rgba(255,255,255,0.06)';
-            mctx.lineWidth = 1;
-            mctx.strokeRect(ox + c * fw/6, oy + r * fh/6, fw/6, fh/6);
-        }
-    }
-
-    // Robots and triballs (simple dots)
-    ROBOTS.forEach(bot => {
-        const rx = fx(bot.x), ry = fy(bot.y);
-        mctx.beginPath();
-        mctx.arc(rx, ry, fs(200), 0, Math.PI*2);
-        mctx.fillStyle = bot.team === 'red' ? '#ef4444' : '#3b82f6';
-        mctx.fill();
-    });
-    TRIBALLS.forEach(t => {
-        if (t.held) return;
-        mctx.beginPath();
-        mctx.arc(fx(t.x), fy(t.y), fs(80), 0, Math.PI*2);
-        mctx.fillStyle = '#f59e0b';
-        mctx.fill();
+    // Robots (small squares)
+    objects.filter(o => o.cls === 'robot').forEach(bot => {
+        const rx = fx(bot.x), ry = fy(bot.y), rs = fs(ROBOT_W);
+        mctx.fillStyle = bot.color;
+        mctx.fillRect(rx-rs/2, ry-rs/2, rs, rs);
     });
 
-    // Color tint
-    mctx.fillStyle = colorTint;
-    mctx.fillRect(0, 0, viewW * 10, viewH * 10);
+    // Triballs (dots)
+    objects.filter(o => o.cls === 'triball' && !o._carrier).forEach(tb => {
+        mctx.beginPath();
+        mctx.arc(fx(tb.x), fy(tb.y), fs(TRIBALL_R), 0, Math.PI*2);
+        mctx.fillStyle = '#c4a63a'; mctx.fill();
+    });
 
     mctx.restore();
 
+    // Color tint overlay
+    mctx.fillStyle = `rgba(${tintR},${tintG},${tintB},0.12)`;
+    mctx.fillRect(0, 0, mc.width, mc.height);
+
     // Scan line
-    const sl = (frame * 3) % mc.height;
-    mctx.strokeStyle = 'rgba(0,212,255,0.3)';
-    mctx.lineWidth = 1;
-    mctx.beginPath();
-    mctx.moveTo(0, sl); mctx.lineTo(mc.width, sl); mctx.stroke();
+    const sl = (frame * 2) % mc.height;
+    mctx.strokeStyle = 'rgba(0,255,136,0.2)'; mctx.lineWidth = 1;
+    mctx.beginPath(); mctx.moveTo(0, sl); mctx.lineTo(mc.width, sl); mctx.stroke();
 }
 
 // ── TELEMETRY UPDATE ──────────────────────────────────────
+let telTick = 0;
 function updateTelemetry() {
-    // Detection list
-    const detList = document.getElementById('det-list');
-    const allObjects = [
-        ...ROBOTS.map(r => ({ id: r.id, type: 'Robot', conf: r.detConf, color: r.detColor, cam: 'CAM-1' })),
-        ...TRIBALLS.slice(0, 8).filter(t => !t.held).map(t => ({ id: t.id, type: 'Triball', conf: t.detConf, color: '#f59e0b', cam: ['CAM-1','CAM-4'][Math.floor(Math.random()*2)] })),
-    ];
+    telTick++;
 
-    detList.innerHTML = '';
-    allObjects.forEach(obj => {
+    // Track list
+    const list = document.getElementById('track-list');
+    list.innerHTML = '';
+    objects.filter(o => o.cls === 'triball' ? !o._carrier : true).slice(0, 10).forEach(obj => {
         const div = document.createElement('div');
-        div.className = 'det-item';
-        div.style.borderLeftColor = obj.color;
+        div.className = 'track-item';
+        div.style.borderLeftColor = obj.cls === 'robot' ? obj.color : '#f59e0b';
+        const confClass = obj.conf > 0.85 ? 'high' : 'med';
         div.innerHTML = `
-            <span class="det-id">${obj.id}</span>
-            <span style="color:#94a3b8;font-size:0.72rem;">${obj.type}</span>
-            <span style="color:#64748b;font-size:0.68rem;margin-left:4px;">${obj.cam}</span>
-            <span class="det-conf" style="color:${obj.conf > 0.9 ? '#10b981' : '#f59e0b'}">${(obj.conf*100).toFixed(1)}%</span>
-        `;
-        detList.appendChild(div);
+            <span class="track-id">${obj.id}</span>
+            <span class="track-class">${obj.cls === 'robot' ? obj.team+' robot' : 'triball'}</span>
+            <span class="track-conf ${confClass}">${(obj.conf*100).toFixed(1)}%</span>
+            <span class="track-age">${obj.age}f</span>`;
+        list.appendChild(div);
     });
 
-    document.getElementById('fb-det').textContent = allObjects.length;
-    document.getElementById('fb-conf').textContent = (allObjects.reduce((s,o)=>s+o.conf,0)/allObjects.length*100).toFixed(1)+'%';
+    document.getElementById('hud-det').textContent = `DETECTIONS: ${objects.filter(o => o.cls==='triball'?!o._carrier:true).length}`;
 
-    // Consensus filter
-    const consDiv = document.getElementById('consensus-display');
-    const cams = ['CAM-1','CAM-2','CAM-3','CAM-4'];
-    const agreements = cams.map(c => ({ cam: c, val: 0.75 + Math.random() * 0.22 }));
-    consDiv.innerHTML = agreements.map(a => `
-        <div class="consensus-row">
-            <span style="font-size:0.72rem;color:#64748b;">${a.cam}</span>
-            <span style="font-size:0.72rem;font-family:'JetBrains Mono',monospace;color:#00d4ff;">${(a.val*100).toFixed(0)}%</span>
-        </div>
-        <div class="consensus-bar">
-            <div class="consensus-fill" style="width:${a.val*100}%;background:linear-gradient(to right,#00d4ff,#a855f7)"></div>
-        </div>
-    `).join('');
-    const avgCons = agreements.reduce((s,a)=>s+a.val,0)/agreements.length;
-    document.getElementById('fb-cons').textContent = (avgCons*100).toFixed(0)+'%';
-    document.getElementById('fb-lat').textContent = `${(8+Math.random()*6).toFixed(1)}ms`;
+    // Inference times (animate slightly)
+    const times = [1.1, 5.2, 0.8, 0.9, 0.4].map(t => t + (Math.random()-0.5)*0.3);
+    const total = times.reduce((a,b)=>a+b,0);
+    const colors = ['#555','#00d4ff','#a855f7','#f59e0b','#00ff88'];
+    times.forEach((t, i) => {
+        const pct = (t/total*100).toFixed(0);
+        const el = document.getElementById(`pipe-${i}`);
+        const ms = document.getElementById(`pms-${i}`);
+        if (el) { el.style.width = pct + '%'; el.style.background = colors[i]; }
+        if (ms) ms.textContent = t.toFixed(1) + 'ms';
+    });
+
+    // Consensus
+    const cvals = [0.93, 0.87, 0.91, 0.78].map(v => Math.max(0.6, Math.min(0.99, v + (Math.random()-0.5)*0.04)));
+    cvals.forEach((v, i) => {
+        const el = document.getElementById(`cons-${i}`);
+        const vl = document.getElementById(`consv-${i}`);
+        if (el) el.style.width = (v*100).toFixed(0) + '%';
+        if (vl) vl.textContent = (v*100).toFixed(0) + '%';
+    });
+
+    // FPS
+    document.getElementById('fps-disp').textContent = Math.round(fpsDisplay) + ' FPS';
+    document.getElementById('lat-disp').textContent = (total).toFixed(1) + 'ms';
+    document.getElementById('gpu-disp').textContent = `GPU ${25 + Math.floor(Math.random()*20)}%`;
+
+    // HUD timestamp
+    const now = new Date();
+    document.getElementById('hud-ts').textContent = now.toISOString().replace('T',' ').substring(0,23);
+    document.getElementById('hud-frame').textContent = `FRAME ${String(frame).padStart(6,'0')}`;
 }
 
-// ── SCORE DISPLAY ─────────────────────────────────────────
+// ── SCORE UPDATE ──────────────────────────────────────────
 let prevRed = 0, prevBlue = 0;
-function updateScoreDisplay() {
-    const dr = scoreRed - prevRed, db = scoreBlue - prevBlue;
+function updateScoreDelta(team) {
     document.getElementById('score-red').textContent = scoreRed;
     document.getElementById('score-blue').textContent = scoreBlue;
-    if (dr > 0) {
-        document.getElementById('delta-red').textContent = `+${dr} pts`;
+    if (team === 'red') {
+        document.getElementById('delta-red').textContent = '+2 pts';
         setTimeout(() => document.getElementById('delta-red').textContent = '', 2000);
-    }
-    if (db > 0) {
-        document.getElementById('delta-blue').textContent = `+${db} pts`;
+    } else {
+        document.getElementById('delta-blue').textContent = '+2 pts';
         setTimeout(() => document.getElementById('delta-blue').textContent = '', 2000);
     }
-    prevRed = scoreRed; prevBlue = scoreBlue;
 }
 
-// ── SYS LOG ───────────────────────────────────────────────
-const LOG_TYPES = ['ok','ok','ok','info','warn'];
+// ── LOG ────────────────────────────────────────────────────
 const LOG_MSGS = [
-    'Detection pipeline nominal.',
-    'YOLO v8 inference: 8.2ms avg.',
-    'Consensus filter: 4/4 cameras agree.',
-    'Robot boundary violation detected.',
-    'Triball exit zone scored — red alliance +2.',
-    'Triball exit zone scored — blue alliance +2.',
-    'Kalman filter prediction updated.',
-    'Frame drop recovered.',
-    'API: score pushed to scoreboard.',
-    'DeepStream pipeline healthy.',
-    'ONNX model: 97.3% accuracy on test set.',
+    ['YOLO v8s inference complete — 5.1ms', 'dim'],
+    ['ByteTrack: 4 active tracks', 'dim'],
+    ['Consensus filter pass — 4/4 cams', 'info'],
+    ['Triball boundary transition detected', 'info'],
+    ['DeepStream pipeline: nominal', 'dim'],
+    ['GPU mem: 2.1GB / 8GB', 'dim'],
+    ['Camera sync drift: +0.3ms', 'warn'],
+    ['NMS threshold: 0.45 IOU', 'dim'],
+    ['Score API: pushed to scoreboard', 'ok'],
+    ['Kalman filter: prediction updated', 'dim'],
+    ['CAM-04 frame drop recovered', 'warn'],
+    ['Model accuracy: 97.1% on validation', 'info'],
 ];
 let logIdx = 0;
-function sysLog(msg, type = '') {
-    const log = document.getElementById('sys-log');
-    const line = document.createElement('div');
-    line.className = 'line ' + (type || LOG_TYPES[Math.floor(Math.random()*LOG_TYPES.length)]);
+function log(msg, type = 'dim') {
+    const area = document.getElementById('log-area');
+    const d = document.createElement('div');
+    d.className = 'log-line ' + type;
     const ts = new Date().toTimeString().split(' ')[0];
-    line.textContent = `[${ts}] ${msg}`;
-    log.prepend(line);
-    if (log.children.length > 30) log.removeChild(log.lastChild);
+    d.textContent = `[${ts}] ${msg}`;
+    area.prepend(d);
+    while (area.children.length > 40) area.removeChild(area.lastChild);
 }
 
 setInterval(() => {
-    sysLog(LOG_MSGS[logIdx % LOG_MSGS.length]);
+    const [msg, type] = LOG_MSGS[logIdx % LOG_MSGS.length];
+    log(msg, type);
     logIdx++;
-}, 1800);
+}, 1600);
 
-// ── MATCH TIMER ───────────────────────────────────────────
+// ── TIMER ─────────────────────────────────────────────────
 function updateTimer(dt) {
-    matchTime = Math.max(0, matchTime - dt);
-    const mins = Math.floor(matchTime / 60);
-    const secs = Math.floor(matchTime % 60);
-    document.getElementById('match-timer').textContent = `${mins}:${String(secs).padStart(2,'0')}`;
-    document.getElementById('match-phase').textContent = matchTime > 30 ? 'Driver Control' : matchTime > 0 ? '⚡ Endgame' : '🏁 Match Over';
-    if (matchTime === 0) document.getElementById('match-phase').style.color = '#f59e0b';
+    if (matchTime > 0) matchTime = Math.max(0, matchTime - dt);
+    const m = Math.floor(matchTime/60), s = Math.floor(matchTime%60);
+    document.getElementById('timer-val').textContent = `${m}:${String(s).padStart(2,'0')}`;
+    const phase = matchTime > 30 ? 'Driver Control' : matchTime > 0 ? '⚡ Endgame' : '🏁 Match Over';
+    document.getElementById('timer-phase').textContent = phase;
+    if (matchTime === 0) document.getElementById('timer-val').style.color = '#ef4444';
 }
 
 // ── MAIN LOOP ─────────────────────────────────────────────
-let telemetryTick = 0;
 function loop(ts) {
     requestAnimationFrame(loop);
     if (paused) return;
-
-    const dt = Math.min((ts - lastTime) / 1000, 0.05);
-    lastTime = ts;
+    const dt = Math.min((ts - lastT) / 1000, 0.05);
+    lastT = ts;
     frame++;
 
-    // FPS counter
-    frameCount++;
-    if (ts - fpsTime > 1000) {
-        fps = Math.round(frameCount * 1000 / (ts - fpsTime));
-        frameCount = 0; fpsTime = ts;
-        document.getElementById('fps-label').textContent = `FPS: ${fps}`;
-        document.getElementById('sys-status').textContent = `LIVE — ${fps}fps`;
-    }
-    document.getElementById('frame-label').textContent = `FRAME: ${frame}`;
+    // FPS
+    fpsSamples.push(1/dt);
+    if (fpsSamples.length > 30) fpsSamples.shift();
+    fpsDisplay = fpsSamples.reduce((a,b)=>a+b,0)/fpsSamples.length;
 
-    // Update robots
     if (matchTime > 0) {
-        ROBOTS.forEach(r => r.update(dt));
+        objects.filter(o => o.cls === 'robot').forEach(r => r.update(dt));
         updateTimer(dt);
     }
 
-    // Draw
     drawField();
 
-    // Mini cameras (every 3 frames to save perf)
-    if (frame % 3 === 0) {
-        const ox = fx(0), oy = fy(0), fw = fs(FIELD_W), fh = fs(FIELD_H);
-        drawMiniCam('cam2', ox, oy, fw/5.5, fh, 'rgba(239,68,68,0.08)');
-        drawMiniCam('cam3', ox + fw*0.82, oy, fw/5.5, fh, 'rgba(59,130,246,0.08)');
-        drawMiniCam('cam4', ox + fw*0.35, oy + fh*0.35, fw*0.3, fh*0.3, 'rgba(0,212,255,0.05)');
-        drawMiniCam('cam5', ox, oy + fh*0.6, fw*0.4, fh*0.4, 'rgba(168,85,247,0.07)');
+    if (frame % 4 === 0) {
+        drawMiniCam('cam2', 0.35, 180, 30, 30);
+        drawMiniCam('cam3', 0.35, 30, 50, 180);
+        drawMiniCam('cam4', 0.55, 20, 100, 120);
+        drawMiniCam('cam5', 0.7, 80, 40, 120);
     }
-
-    // Telemetry (every 30 frames)
-    telemetryTick++;
-    if (telemetryTick % 30 === 0) updateTelemetry();
+    if (frame % 18 === 0) updateTelemetry();
 }
 
 function togglePause() {
     paused = !paused;
-    document.getElementById('btn-pause').textContent = paused ? '▶ Resume Simulation' : '⏸ Pause Simulation';
-    document.getElementById('sys-status').textContent = paused ? 'PAUSED' : `LIVE — ${fps}fps`;
+    document.getElementById('btn-pause').textContent = paused ? '▶ Resume' : '⏸ Pause';
 }
 
 function resetMatch() {
     initObjects();
-    matchTime = 120;
-    updateScoreDisplay();
-    document.getElementById('match-phase').style.color = '';
-    sysLog('Match reset.', 'info');
+    document.getElementById('score-red').textContent = '0';
+    document.getElementById('score-blue').textContent = '0';
+    document.getElementById('timer-val').style.color = '#00ff88';
+    log('Match reset.', 'info');
 }
 
-// Startup logs
-setTimeout(() => sysLog('System initialized. Cameras online.', 'ok'), 200);
-setTimeout(() => sysLog('YOLO v8 model loaded (ONNX).', 'ok'), 600);
-setTimeout(() => sysLog('DeepStream pipeline started — 4 cameras.', 'ok'), 1100);
-setTimeout(() => sysLog('Probabilistic consensus filter: active.', 'info'), 1600);
-setTimeout(() => sysLog('Kubernetes pod health: OK', 'ok'), 2200);
+// Startup
+setTimeout(() => log('System init. 4 cameras online.', 'ok'), 200);
+setTimeout(() => log('YOLO v8s model loaded (ONNX).', 'ok'), 700);
+setTimeout(() => log('DeepStream pipeline started.', 'ok'), 1200);
+setTimeout(() => log('ByteTrack initialized — max age 30.', 'info'), 1700);
+setTimeout(() => log('Probabilistic consensus: active.', 'info'), 2200);
+setTimeout(() => log('Rust API server: listening :8080.', 'ok'), 2800);
 
 requestAnimationFrame(loop);
 </script>
