@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Spoolunking — The Tangled Caves | Nathan Janit</title>
+    <title>Spoolunking — Full Game | Nathan Janit</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
     <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -137,7 +137,7 @@ body { background: #07090f; color: #e2e8f0; font-family: 'Inter', sans-serif; mi
 <body>
 
 <div class="topbar">
-    <h1>🧶 <span>Spoolunking</span> — The Tangled Caves</h1>
+    <h1>🧶 <span>Spoolunking</span> — Full Game</h1>
     <div class="topbar-right">
         <span style="font-size:0.75rem;color:#374151;font-family:'JetBrains Mono',monospace;">Python · Pygame → WASM</span>
         <a href="index.html">← Portfolio</a>
@@ -181,33 +181,49 @@ body { background: #07090f; color: #e2e8f0; font-family: 'Inter', sans-serif; mi
         <div class="sb-section">
             <div class="game-icon">🧶</div>
             <div class="game-name">Spoolunking</div>
-            <div class="game-tagline">A yarn-based roguelike dungeon crawler built from scratch in Python. Navigate three tiers of dungeon, fight enemies, and defeat the Final Tangle.</div>
+            <div class="game-tagline">A full yarn-based roguelite with 3 hand-crafted levels, an unlockable skill tree, smarter enemies, and a final boss. Built from scratch in Python + Pygame.</div>
             <div class="game-tags">
-                <span class="gtag">Roguelike</span>
-                <span class="gtag">Dungeon Crawler</span>
+                <span class="gtag">Roguelite</span>
+                <span class="gtag">Skill Tree</span>
+                <span class="gtag">3 Levels</span>
                 <span class="gtag">Python</span>
                 <span class="gtag">Pygame</span>
-                <span class="gtag">3,500+ Lines</span>
+                <span class="gtag">5,000+ Lines</span>
             </div>
         </div>
 
         <div class="sb-section">
             <div class="sb-label">Lore</div>
             <div class="lore-text">
-                <p>Deep beneath the <em>Woolworks</em>, the ancient dungeons stir. <em>Thred</em> — last of the Yarn Weavers — descends into the dark in search of the Spool of Origins, stolen by the Wine Wraiths.</p>
-                <p>The caves are alive. The walls remember. The slimes multiply. The cats... are just cats. Vicious, unhinged cats.</p>
-                <p>Three tiers await: <em>Upper Caverns</em>, <em>Sunken Vaults</em>, and <em>The Final Tangle</em> — where the boss waits.</p>
+                <p><em>Thred</em> — last of the Yarn Weavers — descends into the ancient dungeons of the <em>Woolworks</em> to reclaim the Spool of Origins, stolen by the Wine King.</p>
+                <p>Three areas of increasing darkness await: <em>The Tangled Cavern</em>, <em>The Wool Labyrinth</em>, and <em>The Spool Chamber</em> — where the Wine King holds court.</p>
+                <p>Collect thread from fallen enemies. Between levels, visit the <em>Skill Tree</em> to grow stronger. Your progression carries through every run.</p>
             </div>
         </div>
 
         <div class="sb-section">
             <div class="sb-label">Controls</div>
             <div class="controls-grid">
-                <span class="ctrl-key">WASD / ↑↓←→</span><span class="ctrl-desc">Move Thred</span>
-                <span class="ctrl-key">Left Click</span><span class="ctrl-desc">Attack (directional)</span>
-                <span class="ctrl-key">🎒 button</span><span class="ctrl-desc">Open inventory</span>
+                <span class="ctrl-key">WASD</span><span class="ctrl-desc">Move Thred</span>
+                <span class="ctrl-key">Left Click</span><span class="ctrl-desc">Attack (8 directions)</span>
+                <span class="ctrl-key">Q (hold)</span><span class="ctrl-desc">Puddle form — pass through string</span>
+                <span class="ctrl-key">E</span><span class="ctrl-desc">Pick up item</span>
+                <span class="ctrl-key">🎒 button</span><span class="ctrl-desc">Inventory / craft / equip</span>
                 <span class="ctrl-key">ESC</span><span class="ctrl-desc">Pause / save</span>
-                <span class="ctrl-key">New Game</span><span class="ctrl-desc">Start a fresh run</span>
+            </div>
+        </div>
+
+        <div class="sb-section">
+            <div class="sb-label">Skill Tree (14 Skills)</div>
+            <div class="controls-grid" style="font-size:0.74rem;">
+                <span class="ctrl-key" style="font-size:0.62rem;">Vitality</span><span class="ctrl-desc">+5 max HP (x2 tiers)</span>
+                <span class="ctrl-key" style="font-size:0.62rem;">Iron Yarn</span><span class="ctrl-desc">-20% damage taken</span>
+                <span class="ctrl-key" style="font-size:0.62rem;">Energy</span><span class="ctrl-desc">+2/+3 max energy</span>
+                <span class="ctrl-key" style="font-size:0.62rem;">Quick Feet</span><span class="ctrl-desc">+speed (x2 tiers)</span>
+                <span class="ctrl-key" style="font-size:0.62rem;">Sharpness</span><span class="ctrl-desc">+attack (x2 tiers)</span>
+                <span class="ctrl-key" style="font-size:0.62rem;">Crit Strike</span><span class="ctrl-desc">20% critical hit</span>
+                <span class="ctrl-key" style="font-size:0.62rem;">Eagle Eye</span><span class="ctrl-desc">+sight radius</span>
+                <span class="ctrl-key" style="font-size:0.62rem;">Thread Sense</span><span class="ctrl-desc">+50% thread drops</span>
             </div>
         </div>
 
@@ -216,39 +232,29 @@ body { background: #07090f; color: #e2e8f0; font-family: 'Inter', sans-serif; mi
             <div class="enemy-list">
                 <div class="enemy-item">
                     <div class="enemy-icon">🍷</div>
-                    <div><div class="enemy-name">Wine Wraith</div><div class="enemy-desc">Throws bottles. Keeps distance. Drops Wine Drops.</div></div>
+                    <div><div class="enemy-name">Wine Wraith</div><div class="enemy-desc">Ranged. Throws bottles. Patrols when you're out of sight. 3 thread.</div></div>
                 </div>
                 <div class="enemy-item">
                     <div class="enemy-icon">🐱</div>
-                    <div><div class="enemy-name">Cat Sentinel</div><div class="enemy-desc">Aggressive melee. Charges on sight. Drops Cat Claws.</div></div>
+                    <div><div class="enemy-name">Cat Sentinel</div><div class="enemy-desc">Aggressive melee. Flanks and charges. Patrols. 2 thread.</div></div>
                 </div>
                 <div class="enemy-item">
                     <div class="enemy-icon">🟢</div>
-                    <div><div class="enemy-name">Slime</div><div class="enemy-desc">Slow but tanky. Drops Slime for crafting. Comes in Red, Green, White.</div></div>
+                    <div><div class="enemy-name">Slime (3 variants)</div><div class="enemy-desc">Red charges · Green keeps distance · White turns invisible. 1 thread.</div></div>
                 </div>
                 <div class="enemy-item">
-                    <div class="enemy-icon">💀</div>
-                    <div><div class="enemy-name">Final Boss</div><div class="enemy-desc">The Wine Wraith King. HP 40. Floor 3.</div></div>
+                    <div class="enemy-icon">👑</div>
+                    <div><div class="enemy-name">The Wine King</div><div class="enemy-desc">Final boss, Level 3. HP 60. 4 royal guards. 20+ thread.</div></div>
                 </div>
-            </div>
-        </div>
-
-        <div class="sb-section">
-            <div class="sb-label">Weapons</div>
-            <div class="controls-grid">
-                <span class="ctrl-key">Punch</span><span class="ctrl-desc">Default, instant, short range</span>
-                <span class="ctrl-key">Claw</span><span class="ctrl-desc">Craft with Slime + Cat Claws</span>
-                <span class="ctrl-key">Ball</span><span class="ctrl-desc">Projectile, craft with 6 Slime</span>
-                <span class="ctrl-key">Straw</span><span class="ctrl-desc">Fast shots, unlocked in inventory</span>
             </div>
         </div>
 
         <div class="sb-section">
             <div class="sb-label">About</div>
             <div class="credit-text">
-                Built by <a href="index.html">Nathan Janit</a> in Python + Pygame (2021–2025).<br>
-                Custom sprites, procedural maps, dynamic lighting, directional animation, save system.<br><br>
-                Compiled to WebAssembly via <a href="https://pygame-web.github.io" target="_blank">Pygbag</a> so it runs in your browser.
+                Built by <a href="index.html">Nathan Janit</a> in Python + Pygame (2021–2026).<br>
+                Custom pixel-art sprites, dynamic lighting, directional animation, 3 hand-crafted levels, 14-node skill tree, thread currency system, patrol AI, boss fights.<br><br>
+                Compiled to WebAssembly via <a href="https://pygame-web.github.io" target="_blank">Pygbag</a> — plays entirely in-browser, no install.
             </div>
         </div>
 
