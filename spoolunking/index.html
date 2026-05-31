@@ -223,95 +223,58 @@ function show_infobox() {
     <link rel="icon" type="image/png" href="favicon.png" sizes="16x16">
 
     <style>
-        #status {
-            display: inline-block;
-            vertical-align: top;
-            margin-top: 20px;
-            margin-left: 30px;
-            font-weight: bold;
-            color: rgb(120, 120, 120);
-        }
+    body {
+        font-family: arial;
+        margin: 0;
+        padding: 0;
+        background-color: #000;
+        overflow: hidden; /* Prevent scrollbars */
+        position: relative;
+        width: 100vw;
+        height: 100vh;
+    }
 
-        #progress {
-            height: 20px;
-            width: 300px;
-        }
+    /* Force the canvas to absolute center, overriding Pygbag's inline styles */
+    canvas.emscripten {
+        position: absolute !important;
+        top: 50% !important;
+        left: 50% !important;
+        transform: translate(-50%, -50%) !important;
+        
+        /* Maintain 16:9 Aspect Ratio */
+        aspect-ratio: 16 / 9 !important;
+        
+        /* Scale up to fit window, but don't overflow */
+        width: 100vw !important;
+        height: auto !important;
+        max-width: 100vw !important;
+        max-height: 100vh !important;
+        
+        border: 0px none !important;
+        background-color: #000;
+        z-index: 5;
+        margin: 0 !important;
+        padding: 0 !important;
+        display: block !important;
+    }
 
-        #infobox {
-            position: fixed; /* center relative to viewport */
-            background: green;
-            color: blue;
-            font-weight: bold;
-            padding: 12px 24px;
- /*           display: none; */
-            z-index: 999999;
-        }
-        div.emscripten { text-align: center; }
-        div.emscripten_border { border: 1px solid black; }
-        div.thick_border { border: 4px solid black; }
+    /* Hide Pygbag's overlay UI elements so they don't break layout */
+    #status, #progress, #transfer {
+        display: none !important;
+    }
 
-        /* canvas MUST NOT have border/padding — breaks mouse coords */
-        /* Use !important to override pygbag's JS inline style injection */
-        canvas.emscripten {
-            border: 0px none !important;
-            background-color: #000;
-            /* Force 16:9 and prevent squishing to square */
-            position: relative !important;
-            inset: auto !important;
-            width: 100% !important;
-            height: auto !important;
-            aspect-ratio: 16 / 9 !important;
-            max-width: 100vw !important;
-            max-height: 100vh !important;
-            z-index: 5;
-            padding: 0;
-            margin: 0 auto;
-            display: block;
-        }
-
-        body {
-            font-family: arial;
-            margin: 0;
-            padding: 0;
-            background-color: #000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            overflow: hidden;
-        }
-
-        .topright{
-           position:absolute;
-           top:0px;
-           right:0px;
-        }
-
-        .bottomright {
-            position:absolute;
-            top: 40%;
-            right: 0px;
-        }
-
-        .center {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .trinfo{
-           position: relative;
-           right: 0px;
-           border: 1px solid black;
-        }
-
-        .framed{
-           position: relative;
-           top: 150px;
-           right: 10px;
-           border: 1px solid black;
-        }
-    </style>
+    #infobox {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: green;
+        color: blue;
+        font-weight: bold;
+        padding: 12px 24px;
+        z-index: 999999;
+    }
+</style>
 
     <script>
 /*
