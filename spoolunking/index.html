@@ -191,8 +191,6 @@ function show_infobox() {
             if (cw <= 0) return;
             // Only correct when pygbag has set a non-16:9 size
             var targetRatio = 16 / 9;
-            var currentRatio = cw / (ch || 1);
-            if (Math.abs(currentRatio - targetRatio) < 0.05) return; // already correct
             var vw = document.documentElement.clientWidth  || window.innerWidth  || 800;
             var vh = document.documentElement.clientHeight || window.innerHeight || 450;
             var w, h;
