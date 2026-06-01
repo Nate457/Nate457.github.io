@@ -188,65 +188,61 @@ function show_infobox() {
     <link rel="icon" type="image/png" href="favicon.png" sizes="16x16">
 
     <style>
-        /* Reset everything */
-        *, *::before, *::after { box-sizing: border-box; }
-
         html, body {
             margin: 0;
             padding: 0;
-            width: 100%;
-            height: 100%;
             background: #000;
             overflow: hidden;
         }
 
-        /* Canvas sits centered, letter-boxed to 16:9, fills the container */
-        canvas#canvas {
-            display: block !important;
-            position: absolute !important;
+        /* Flex body — centers the canvas, nothing else visible */
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        /* Hide every sibling that pushed the canvas sideways */
+        #transfer, #pyconsole, #crt, #html, #dlg {
+            display: none !important;
+        }
+        canvas#canvas3d { display: none !important; }
+
+        /* Loading infobox — floats on top, auto-hidden by Python after load */
+        #infobox {
+            position: fixed !important;
             top: 50% !important;
             left: 50% !important;
             transform: translate(-50%, -50%) !important;
-            /* contain to viewport at 16:9 */
-            width:  min(100vw, calc(100vh * 16 / 9)) !important;
-            height: min(100vh, calc(100vw *  9 / 16)) !important;
+            z-index: 999999 !important;
+            background: rgba(0,0,0,0.85) !important;
+            color: #e0d090 !important;
+            font-family: monospace !important;
+            font-size: 14px !important;
+            padding: 12px 20px !important;
+            border-radius: 4px !important;
+        }
+
+        /* Main canvas — letter-boxed 16:9 within the flex container.
+           landscape viewport (wider than 16:9): height is the limit */
+        canvas#canvas {
+            display: block !important;
             border: none !important;
             padding: 0 !important;
             background: #000 !important;
-            image-rendering: pixelated;
-            image-rendering: crisp-edges;
+            flex-shrink: 0 !important;
+            height: 100vh !important;
+            width: calc(100vh * 16 / 9) !important;
         }
 
-        /* Hide canvas3d — not used */
-        canvas#canvas3d { display: none !important; }
-
-        /* Loading infobox — centered overlay */
-        #infobox {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: #1a1a2e;
-            color: #e0c84a;
-            font-family: monospace;
-            font-size: 14px;
-            font-weight: bold;
-            padding: 16px 28px;
-            border: 2px solid #e0c84a;
-            border-radius: 4px;
-            z-index: 999999;
-            white-space: nowrap;
-        }
-
-        /* Hide everything else */
-        #transfer, #pyconsole, #crt, #html, #dlg,
-        #status, #progress,
-        div.emscripten, div.emscripten_border, div.thick_border {
-            display: none !important;
-        }
-
-        .bottomright, .topright, .center, .trinfo, .framed {
-            display: none !important;
+        /* portrait/square viewport: width is the limit */
+        @media (max-aspect-ratio: 16/9) {
+            canvas#canvas {
+                width: 100vw !important;
+                height: calc(100vw * 9 / 16) !important;
+            }
         }
     </style>
 
